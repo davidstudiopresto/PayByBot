@@ -450,6 +450,20 @@ test('programmer un ticket : carte mobilité CMI-S, « Tous » coche tout Paris'
   await expect(page.getByText(/ticket carte mobilité CMI-S d’une journée/)).toBeVisible()
 })
 
+test('programmer un ticket CMI-S : gratuit, 0,00 € (jamais « prix indisponible »)', async ({ page }) => {
+  await page.route('**/api/quote', (r) => r.fulfill({ status: 400, json: { detail: 'Quote error' } })) // no price for a free ticket
+  await demo(page)
+  await wizardButton(page).click()
+  await page.getByRole('button', { name: 'Suivant' }).click()
+  await page.getByRole('button', { name: /Carte mobilité CMI-S/ }).click()
+  await page.getByRole('button', { name: 'Suivant' }).click()
+  await page.getByRole('checkbox', { name: 'Tous' }).check()
+  await page.getByRole('checkbox', { name: /titulaire/ }).check()
+  await page.getByRole('button', { name: 'Suivant' }).click()
+  await expect(page.getByText(/0,00/).first()).toBeVisible()
+  await expect(page.getByText(/Prix indisponible/)).toHaveCount(0)
+})
+
 test('programmer un ticket : un tarif sans durées ni nom ne fait pas planter', async ({ page }) => {
   const rate = { type: 'Visitor', maxStayStatus: null, parkingNotAllowedReason: null }
   await page.route('**/api/rates*', (r) => r.fulfill({ json: [

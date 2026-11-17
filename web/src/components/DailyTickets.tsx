@@ -954,7 +954,8 @@ export function DailyWizard({
       })
       .then(
         (q) => !cancelled && setCost(q.cost),
-        () => !cancelled && (setCost(null), setCostFailed(true)),
+        // A free ticket (CMI-S / Handi) has no price at PayByPhone: 0 €, never « prix indisponible ».
+        () => !cancelled && (setCost(null), setCostFailed(!(kind === 'cmis' || (effective && handi(effective))))),
       )
     return () => {
       cancelled = true
