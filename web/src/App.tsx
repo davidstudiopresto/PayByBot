@@ -24,6 +24,7 @@ import { api, ApiError, forgetZoneLookup, type Me, type Overview } from '@/lib/a
 const SecurityPage = lazy(() => import('@/components/SecurityPage').then((m) => ({ default: m.SecurityPage })))
 const LegalView = lazy(() => import('@/components/Legal').then((m) => ({ default: m.LegalView })))
 const AdminPage = lazy(() => import('@/components/Admin').then((m) => ({ default: m.AdminPage })))
+const ONBOARDING_KEY = 'pbb-onboarding'
 const Welcome = lazy(() => import('@/components/Welcome').then((m) => ({ default: m.Welcome })))
 const SubscriptionDialog = lazy(() => import('@/components/Subscription').then((m) => ({ default: m.SubscriptionDialog })))
 const Mockup = lazy(() => import('@/components/Mockup').then((m) => ({ default: m.Mockup })))
@@ -81,7 +82,22 @@ export default function App() {
   const [legal, setLegal] = useState<LegalPage | null>(() => legalPageFromHash(window.location.hash))
   const [route, setRoute] = useState(() => routeFromHash(window.location.hash))
   // Right after "S'inscrire": open the renewal setup on the dashboard.
-  const [onboarding, setOnboarding] = useState(false)
+  // The welcome page, until the user leaves it: kept for this tab, so reloading it does not skip to the dashboard.
+  const [onboarding, setOnboarding] = useState(() => {
+    try {
+      return sessionStorage.getItem(ONBOARDING_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+  useEffect(() => {
+    try {
+      if (onboarding) sessionStorage.setItem(ONBOARDING_KEY, '1')
+      else sessionStorage.removeItem(ONBOARDING_KEY)
+    } catch {
+      // no storage: a reload shows the dashboard, as before
+    }
+  }, [onboarding])
   const [autoRenew, setAutoRenew] = useState(false) // past the welcome page: the renewal opens by itself
   const [ticketPlate, setTicketPlate] = useState<string | undefined>() // past the welcome page: its ticket wizard
   const [zoneReady, setZoneReady] = useState(true)

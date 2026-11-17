@@ -174,7 +174,8 @@ export function Welcome({
                 {vehicles === undefined ? (
                   <PlateBone className="ml-auto" />
                 ) : vehicles.length ? (
-                  <span className="inline-flex flex-col items-end gap-1.5">
+                  // Two plates a line on a computer (one column on a phone, where two do not fit), on the right.
+                  <span className={cn('inline-grid justify-items-end gap-1.5', vehicles.length > 1 && 'sm:grid-cols-2')}>
                     {vehicles.map((v) => (
                       <Plate key={v.plate} plate={v.plate} size="sm" />
                     ))}
@@ -251,7 +252,7 @@ export function Welcome({
           {/* The vehicle to automate: one, chosen with a tap (the resident one first). */}
           {offered.length > 0 && !noCard && (
             <div className="mt-6" role="radiogroup" aria-label="Stationnement à automatiser">
-              <p className="mb-2 text-sm text-ink/60">{offered.length > 1 ? 'Quel stationnement automatiser ?' : 'Stationnement à automatiser :'}</p>
+              <p className="mb-2 text-sm text-ink/60">{offered.length > 1 ? 'Par quelle automatisation commençons-nous ?' : 'Stationnement à automatiser :'}</p>
               <div className="space-y-1.5">
                 {offered.map((v) => {
                   const on = v.plate === choice?.plate

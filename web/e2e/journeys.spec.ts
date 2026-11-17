@@ -783,6 +783,15 @@ async function residentCars(page: import('@playwright/test').Page, change: (v: {
   })
 }
 
+test('bienvenue : recharger la page garde la page de bienvenue (pas le tableau de bord)', async ({ page }) => {
+  await demo(page)
+  await page.goto(LINK + '#/bienvenue')
+  await expect(page.getByText('Vos informations')).toBeVisible()
+  await page.reload()
+  await expect(page.getByText('Vos informations')).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Commencer mon essai gratuit/ })).toBeVisible()
+})
+
 test('bienvenue : on choisit un seul véhicule ; un résident est renouvelé aussitôt', async ({ page }) => {
   await residentCars(page, (vs) => {
     const first = vs.find((v) => v.zone)!
@@ -792,7 +801,7 @@ test('bienvenue : on choisit un seul véhicule ; un résident est renouvelé aus
   })
   await demo(page)
   await page.goto(LINK + '#/bienvenue')
-  await expect(page.getByText('Quel stationnement automatiser ?')).toBeVisible()
+  await expect(page.getByText('Par quelle automatisation commençons-nous ?')).toBeVisible()
   await expect(page.getByRole('radio')).toHaveCount(3) // every car, one to choose
   await expect(page.getByRole('radio', { name: /AB-?123/ })).toHaveAttribute('aria-checked', 'true') // the resident one first
   await page.getByRole('radio', { name: /GH-?456/ }).click()
