@@ -2,7 +2,7 @@ import { Loading } from '@/components/Loading'
 import { useEffect, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import { LogOut } from 'lucide-react'
-import { PayByPhone, Plate, withPayByPhone } from '@/components/signs'
+import { PayByBot, PayByPhone, Plate, withPayByPhone } from '@/components/signs'
 import { TopBar } from '@/components/TopBar'
 import { InviteButton } from '@/components/Invite'
 import { DailyTickets, DailyWizard, isDaily, ruleState, when as whenAt } from '@/components/DailyTickets'
@@ -13,8 +13,7 @@ import { ui } from '@/lib/styles'
 import { cn } from '@/lib/utils'
 import { HostedFooter } from '@/components/Footer'
 import { CheckoutDone } from '@/components/CheckoutDone'
-import { ActivateRenewal, CardGate, CoveredLine, RenewalActions, RenewalNote, RenewalSwitch, RiverainDialog, pauseState, nextRenewal, when, ZoneTag, RiverainCard, WEEKLY_LABEL, renewalOf, runPendingRenewals, takePlateAfterPay } from '@/components/Riverain'
-import { ToggleSwitch } from '@/components/ui/toggle-switch'
+import { ActivateRenewal, CardGate, RenewalOff, CoveredLine, RenewalActions, RenewalNote, RenewalSwitch, RiverainDialog, pauseState, nextRenewal, when, ZoneTag, RiverainCard, WEEKLY_LABEL, renewalOf, runPendingRenewals, takePlateAfterPay } from '@/components/Riverain'
 import { api, type Account, type Me, type Overview, type Session } from '@/lib/api'
 
 function useNow(interval = 1000) {
@@ -170,9 +169,8 @@ function Ticket({
       )}
       {/* A non-resident ticket with nothing after it: the same switch, off; turning it on takes it again from its end. */}
       {daily && !renewal && !data.autopilots.some((ap) => ap.enabled && sameCar(ap.plate, session.plate)) && (
-        <div className="flex items-center justify-between gap-4 border-t border-ink/[0.06] px-5 py-4">
-          <span className="text-[1.05rem] font-medium text-ink">Renouvellement auto</span>
-          <ToggleSwitch checked={renewing} label="Renouvellement auto" onPress={() => setRenewing(true)} />
+        <div className="border-t border-ink/[0.06] px-5 py-4">
+          <RenewalOff onActivate={() => setRenewing(true)} busy={renewing} />
         </div>
       )}
     </article>
@@ -237,7 +235,8 @@ function IdleVehicles({ data, onChanged, hosted, demo, autoPlate, locked, onLogo
   const cars = data.vehicles.filter((v) => isResident(v) && !renewed.has(key(v.plate)) && !parked.has(key(v.plate)))
   if (!cars.length && !others.length) return null
   // Résident or Non résident: plain grey text, no colour (as on the ticket cards).
-  const tag = (resident: boolean) => <span className="text-sm text-ink/60">{resident ? 'Résident' : 'Non résident'}</span>
+  // « Résident » said, nothing for the others (no « Non résident » repeated on every line).
+  const tag = (resident: boolean) => (resident ? <span className="text-sm text-ink/60">Résident</span> : null)
   const automate = 'h-9 shrink-0 rounded-[10px] bg-ink/[0.06] px-4 text-sm font-semibold text-ink transition hover:bg-ink/[0.1]'
   const row = (v: Overview['vehicles'][number], status: ReactNode, button: ReactNode) => (
     <li key={v.plate} className="flex items-center gap-4 px-5 py-3 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-center">
@@ -346,6 +345,11 @@ export function Dashboard({
     keep(ACCOUNT_KEY, me.username, a)
   }
   const [checkoutDone, setCheckoutDone] = useState(false)
+  // The tickets PayByBot itself paid (its history): shown at the bottom, once there is one.
+  const [taken, setTaken] = useState(0)
+  useEffect(() => {
+    api.history().then((rows) => setTaken(rows.length), () => {})
+  }, [data?.autopilots.length])
   const [plansOpen, setPlansOpen] = useState(false)
   // The free month starts with the first activation: the account is asked again then, so its bar shows at once.
   const automations = data?.autopilots.length ?? 0
@@ -710,6 +714,12 @@ export function Dashboard({
               setProgramAsked((n) => n + 1)
             }}
           />
+        )}
+        {/* What PayByBot has done for the account, said once it has done something (the reason to stay). */}
+        {taken > 0 && (
+          <p className="mt-10 text-center text-sm text-ink/60">
+            <PayByBot /> a déjà pris <span className="font-semibold text-ink">{taken} ticket{taken > 1 ? 's' : ''}</span> pour vous.
+          </p>
         )}
       </main>
 

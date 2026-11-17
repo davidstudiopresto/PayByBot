@@ -607,7 +607,7 @@ export function CoveredLine({ end, soon = false }: { end: number; soon?: boolean
       <span className="min-w-0 flex-1">
         {/* The tick alone, before the words (no round behind it): light, still reassuring. */}
         <span className={cn('flex items-center gap-1.5 text-[1.05rem] font-medium', soon ? 'text-destructive' : 'text-ink')}>
-          <Check className={cn('size-4 shrink-0', soon ? 'text-destructive' : 'text-[#1a9a4a]')} strokeWidth={3} />
+          <Check className={cn('check-draw size-4 shrink-0', soon ? 'text-destructive' : 'text-[#1a9a4a]')} strokeWidth={3} />
           {soon ? 'Bientôt terminé' : 'Véhicule couvert'}
         </span>
         {/* The time left, in days, hours and minutes (the exact end on hover). */}
@@ -670,18 +670,21 @@ export function OpeningSwitch({ open, isOpen, on = false }: { open: () => void; 
     if (isOpen) setPressed(false) // the window took over: green as long as it is open
   }, [isOpen])
   const checked = on || pressed || isOpen
+  return <RenewalOff onActivate={() => !(pressed || isOpen) && (setPressed(true), open())} busy={checked} note={false} />
+}
+
+/** « Renouvellement auto », off: not a grey switch the eye skips but the one thing to do, said plainly (the car is not
+ *  covered after this ticket) with a blue « Activer ». */
+export function RenewalOff({ onActivate, busy = false, note = true }: { onActivate: () => void; busy?: boolean; /** « Non activé… » (not where the card says it already, in red). */ note?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <SwitchLabel on={checked} />
-      <ToggleSwitch
-        checked={checked}
-        label="Renouvellement résident automatique"
-        onPress={() => {
-          if (pressed || isOpen) return
-          setPressed(true)
-          setTimeout(open, 280) // the knob slides to green, then the window opens
-        }}
-      />
+      <span className="min-w-0">
+        <span className="block text-[1.05rem] font-medium text-ink">Renouvellement auto</span>
+        {note && <span className="block text-sm text-ink/60">Non activé : plus couvert après ce ticket</span>}
+      </span>
+      <button onClick={onActivate} disabled={busy} className={cn(ui.pillBlue, 'shrink-0')} aria-label="Activer le renouvellement auto">
+        {busy ? <Loader2 className="size-4 animate-spin" /> : 'Activer'}
+      </button>
     </div>
   )
 }
