@@ -565,18 +565,19 @@ export function RiverainCard({
 
 /** The kind of ticket and the zone, as one quiet two-part tag: « Résident | 75001 ». */
 export function ZoneTag({ zone, resident = true, kind }: { zone: string; resident?: boolean; kind?: string | null }) {
-  // The ticket's kind in front of the zone: « Résident », or for another ticket its vehicle type (or CMI-S card).
-  const badge = resident ? 'Résident' : kind
-  // On a phone, the short word (« Léger », « Lourd », « CMI-S »): the plate and the zone must fit beside it.
-  const short = badge?.replace(/^Véhicule (\S)/, (_, c: string) => c.toUpperCase()).replace(/^Carte mobilité /, '')
-  // Plain text, no shape and no colour: « Résident – 75001 ».
+  // The ticket's kind in front of the zone: « Résident », or for another ticket its vehicle type (« CMI-S » for the
+  // mobility card, never « Carte mobilité » in full).
+  const badge = (resident ? 'Résident' : kind)?.replace(/^Carte mobilité /, '')
+  // On a phone, the short word (« Léger », « Lourd »): the plate and the zone must fit beside it.
+  const short = badge?.replace(/^Véhicule (\S)/, (_, c: string) => c.toUpperCase())
+  // A grey rounded chip, as Uber's « Prise en charge immédiate »: « CMI-S – 75001 ».
   return (
-    <span className="inline-flex shrink-0 items-center text-sm leading-none whitespace-nowrap text-ink/60">
+    <span className="inline-flex h-8 shrink-0 items-center rounded-full bg-ink/[0.06] px-3 text-sm leading-none whitespace-nowrap text-ink">
       {badge && (
         <span>
           <span className="sm:hidden">{short}</span>
           <span className="hidden sm:inline">{badge}</span>
-          <span className="px-1.5">–</span>
+          <span className="px-1.5 text-ink/45">–</span>
         </span>
       )}
       <span className="tabular-nums">{zone}</span>
@@ -632,15 +633,13 @@ export function CoveredLine({ end, start, soon = false }: { end: number; /** The
   // Like the card's other rows: the status left, the time left right under its label (the exact end on hover).
   return (
     <div>
-    {/* As every row of the card: a title and a grey line under it on the left, one thing on the right. */}
-    <div className="flex items-center justify-between gap-4">
-      {/* A plain title, no icon: the green bar under it says it runs (red in the last 15 minutes). */}
-      <span className={cn('min-w-0 text-[1.05rem] font-medium', soon ? 'text-destructive' : 'text-ink')}>
-        {soon ? 'Bientôt terminé' : 'Véhicule couvert'}
-      </span>
-      <span className="shrink-0 text-[1.05rem] font-medium whitespace-nowrap text-ink tabular-nums" title={`Jusqu’au ${when(end)}`}>
+    {/* As PayByPhone's own card: the time left as the title (« covered » goes without saying), when it expires under
+        it in plain words (« Expire demain, 15h19 »). In the last 15 minutes, in red. */}
+    <div title={`Jusqu’au ${when(end)}`}>
+      <span className={cn('block text-[1.05rem] font-medium whitespace-nowrap tabular-nums', soon ? 'text-destructive' : 'text-ink')}>
         <TimeLeft ms={end - now} />
       </span>
+      <span className={cn('block text-sm', soon ? 'text-destructive' : 'text-ink/60')}>Expire {expiresWhen(end, now)}</span>
     </div>
     {left !== null && (
       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-ink/[0.06]" aria-hidden>
@@ -652,6 +651,18 @@ export function CoveredLine({ end, start, soon = false }: { end: number; /** The
     )}
     </div>
   )
+}
+
+/** « aujourd'hui, 15h19 », « demain, 15h19 », else « mer. 19 nov., 15h19 » (Paris days), as PayByPhone says it. */
+function expiresWhen(t: number, now: number) {
+  const day = paris(t).iso
+  const say =
+    day === paris(now).iso
+      ? 'aujourd’hui'
+      : day === paris(now + 86_400_000).iso
+        ? 'demain'
+        : new Date(t).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', timeZone: TZ })
+  return `${say}, ${hourText(t)}`
 }
 
 /** « mardi 3 novembre, 23h54 » at Paris time (minutes only when not on the hour). */
