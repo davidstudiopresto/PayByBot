@@ -150,14 +150,6 @@ function AccountDialog({
                   <li className={cn(rowClass, 'text-ink/60')}>{data.vehicles.length ? 'Aucun véhicule au tarif résident' : 'Aucun véhicule'}</li>
                 )}
               </Rows>
-              <p className={note}>
-                Un véhicule manque ? Ajoutez-le sur{' '}
-                {/* PayByPhone's own app link (as in the e-mails): on an iPhone it opens the app when installed (a universal
-                    link), else its App Store page. */}
-                <a href="https://paybyphone.onelink.me/ZQkh/" target="_blank" rel="noreferrer" className={ui.link}>
-                  <PayByPhone />
-                </a>
-              </p>
             </Section>
 
             {/* The subscription: where it stands, and its one action. */}
@@ -235,6 +227,14 @@ function AccountDialog({
               </Rows>
             </Section>
             <SmsHelp wanted={sms.help} onClose={sms.closeHelp} />
+            {/* All of it comes from PayByPhone: what is missing or wrong is changed there, in its app (its own link, as in
+                the e-mails: on an iPhone it opens the app when installed, else its App Store page). One line. */}
+            <p className="text-sm text-ink/60">
+              Une info à corriger ? Faites-le sur{' '}
+              <a href="https://paybyphone.onelink.me/ZQkh/" target="_blank" rel="noreferrer" className={ui.link}>
+                <PayByPhone />
+              </a>
+            </p>
 
             {!demo && (
               <button onClick={() => setDeleting(true)} className="text-sm font-medium text-destructive/80 underline-offset-[3px] transition hover:text-destructive hover:underline">
@@ -251,7 +251,6 @@ function AccountDialog({
 // One look for every part of the window: a section title, a white box of rows of one height, the label on the left
 // and the value on the right, all in the same text size.
 const rowClass = 'flex min-h-12 items-center justify-between gap-4 px-4 py-2.5 text-[0.95rem]'
-const note = 'mt-2 text-sm text-ink/60'
 
 function Section({ title, children }: { title?: string; children: React.ReactNode }) {
   return (
