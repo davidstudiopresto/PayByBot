@@ -692,9 +692,9 @@ PAYBYPHONE_URL = "https://paybyphone.onelink.me/ZQkh/"
 RETRY_AFTER = timedelta(hours=1)  # a renewal that could not pay is tried again this long after
 
 # PayByPhone bills each SMS confirmation apart from the ticket; PayByBot cannot pay it, so a payment can fail.
-SMS_HINT = ("À vérifier aussi : dans l'application PayByPhone, « Notifications relatives au stationnement », la "
-            "« Confirmation par SMS » doit être désactivée. Chaque SMS y est facturé 0,50 € à part, et ces frais ne "
-            "peuvent pas être payés automatiquement.")
+SMS_HINT = ("À vérifier aussi : les notifications SMS de PayByPhone doivent être désactivées (dans « Mon compte » "
+            "sur PayByBot, ou dans l'application PayByPhone, « Notifications relatives au stationnement »). Chaque SMS "
+            "y est facturé 0,20 à 0,25 € à part, et ces frais ne peuvent pas être payés automatiquement.")
 
 UNCONFIRMED = ("PayByPhone n'a pas confirmé ce stationnement. Vérifiez dans l'application PayByPhone "
                "avant de réessayer, pour ne pas payer deux fois.")

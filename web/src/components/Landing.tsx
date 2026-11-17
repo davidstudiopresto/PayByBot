@@ -22,7 +22,7 @@ const FEATURES: Question[] = [
 const FEATURE_ICONS = [RefreshCw, Pause, BellRing, Headset]
 
 /** Each step's screen (demo account, captured at one size: 1040 × 940). */
-const STEP_SHOTS = ['/how/1-connexion.png?v=19', '/how/2-activation.png?v=17', '/how/3-tableau-de-bord.png?v=18']
+const STEP_SHOTS = ['/how/1-connexion.png?v=19', '/how/2-activation.png?v=19', '/how/3-tableau-de-bord.png?v=20']
 
 /**
  * Real users' feedback only, given with their consent: [first name and last-name initial, e.g. « Charles H. », one sentence].
@@ -584,10 +584,9 @@ const QUESTIONS: Question[] = [
   [
     'Faut-il changer un réglage dans PayByPhone ?',
     <>
-      Oui, un seul : dans l’application <PayByPhone />, ouvrez « Notifications relatives au stationnement » et
-      désactivez « Confirmation par SMS ». Chaque SMS y est facturé 0,50 € à part, et ces frais ne peuvent pas être
-      payés automatiquement : sans ce réglage, vos tickets risquent de ne pas être pris. Le rappel SMS avant la fin peut
-      rester activé.
+      Oui, un seul : couper les notifications SMS de <PayByPhone /> (confirmation et rappel), facturées 0,20 à 0,25 €
+      chacune. Les frais de confirmation ne peuvent pas être payés automatiquement : sans ce réglage, vos tickets
+      risquent de ne pas être pris. <PayByBot /> les coupe pour vous d’un geste, à l’inscription ou dans « Mon compte ».
     </>,
   ],
   [
