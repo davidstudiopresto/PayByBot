@@ -356,8 +356,8 @@ test('bienvenue sans carte bancaire valide : croix rouge, on ne passe pas', asyn
   await page.goto('/#/bienvenue')
   const next = page.getByRole('button', { name: /^Commencer mon essai gratuit/ }) // a resident car: activated from here
   // Only the card step: how to add one, with its screens; no vehicle to choose yet.
-  await expect(page.getByText(/Votre carte a expiré/)).toBeVisible()
-  await expect(page.getByText(/Modes de paiement/).first()).toBeVisible()
+  await expect(page.getByText(/Carte expirée/)).toBeVisible()
+  await expect(page.getByText(/Apple Pay et Google Pay non acceptés/)).toBeVisible()
   await expect(page.getByRole('img', { name: /Ajouter une carte/ })).toBeVisible()
   await expect(next).toHaveCount(0)
   await expect(page.getByRole('radio')).toHaveCount(0)
@@ -428,7 +428,7 @@ test('impasses : sans carte bancaire, « Mon compte » reste accessible', async 
     await route.fulfill({ json: { ...json, payments: [] } })
   })
   await page.goto(LINK + '#demo')
-  const gate = page.getByRole('dialog', { name: 'Carte bancaire requise' })
+  const gate = page.getByRole('dialog', { name: 'Ajoutez une carte bancaire dans PayByPhone' })
   await expect(gate).toBeVisible()
   await gate.getByRole('button', { name: 'Mon compte' }).click()
   await expect(page.getByRole('heading', { name: 'Mon compte' })).toBeVisible()

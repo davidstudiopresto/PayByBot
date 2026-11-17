@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { ui } from '@/lib/styles'
 import { LineBone, PlateBone } from '@/components/Skeletons'
 import { SmoothHeight } from '@/components/ui/smooth-height'
-import { activateWeekly, AddCardGuide, clearPending, savePending, savePlateAfterPay, when, type PendingRenewal } from '@/components/Riverain'
+import { activateWeekly, AddCardGuide, NoWallets, clearPending, savePending, savePlateAfterPay, when, type PendingRenewal } from '@/components/Riverain'
 import { PlansDialog } from '@/components/Pricing'
 
 /** +33612345678 -> +33 6 12 34 56 78 (other formats are shown as they are). */
@@ -238,8 +238,9 @@ export function Welcome({
             {noCard && (
               <div className="mt-6">
                 <h2 className="text-[1.05rem] font-medium text-ink">
-                  {cards.length ? 'Votre carte a expiré : ajoutez-en une' : 'Ajoutez une carte bancaire'}
+                  {withPayByPhone(cards.length ? 'Carte expirée : ajoutez-en une dans PayByPhone' : 'Ajoutez une carte bancaire dans PayByPhone')}
                 </h2>
+                <NoWallets className="mt-1" />
                 <AddCardGuide />
               </div>
             )}

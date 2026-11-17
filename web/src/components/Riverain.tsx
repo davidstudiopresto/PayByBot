@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react'
-import { Check, Loader2, Mail, Pause, Play, Repeat, RotateCw } from 'lucide-react'
+import { Check, Loader2, Mail, Pause, Play, Repeat, RotateCw, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { NoPayment } from '@/components/NoPayment'
@@ -1481,7 +1481,7 @@ export type ResidentStatus = { zone: string | null; resident: boolean | null }
 
 /** Full screen over the blurred page: PayByBot needs a vehicle with the resident rate; what to do, then the actions. */
 /** Full screen over the blurred page: what PayByBot needs and what to do, then the actions (children). */
-function FullScreenNotice({ title, intro, steps, figures = [], children }: { title: string; intro: ReactNode; steps: string[]; figures?: ReactNode[]; children: ReactNode }) {
+function FullScreenNotice({ title, intro, steps, figures = [], children }: { title: string; intro?: ReactNode; steps: string[]; figures?: ReactNode[]; children: ReactNode }) {
   return (
     <div
       role="dialog"
@@ -1494,7 +1494,7 @@ function FullScreenNotice({ title, intro, steps, figures = [], children }: { tit
         <h2 id="full-screen-notice-title" className={cn('mt-5', ui.dialogTitle)}>
           {title}
         </h2>
-        <p className="mt-2 text-[0.95rem] leading-relaxed text-ink/60">{intro}</p>
+        {intro && <p className="mt-2 text-[0.95rem] leading-relaxed text-ink/60">{intro}</p>}
         {steps.length > 0 && (
         <ol className="mt-5 space-y-2.5 text-[0.95rem] leading-relaxed text-ink/60">
           {steps.map((step, i) => (
@@ -1571,18 +1571,22 @@ function Shots({ figures }: { figures: ReactNode[] }) {
   )
 }
 
+/** Said where a card is asked: Apple Pay and Google Pay are no card (a red cross, the words in red; no brand mark). */
+export function NoWallets({ className }: { className?: string }) {
+  return (
+    <p className={cn('flex items-center gap-2 text-[0.95rem] font-semibold text-destructive', className)}>
+      <X className="size-4 shrink-0" strokeWidth={3} />
+      Apple Pay et Google Pay non acceptés
+    </p>
+  )
+}
+
 /** The card screen's guide, and the welcome page's when the account has no card yet. */
 export function AddCardGuide() {
+  // The screens alone: they show where (Compte › Modes de paiement › Ajouter une carte), framed in blue.
   return (
-    <div className="mt-4 text-[0.95rem] leading-relaxed text-ink/60">
-      <p>
-        Dans {withPayByPhone('PayByPhone')} : <span className="text-ink">Compte</span> ›{' '}
-        <span className="whitespace-nowrap text-ink">Modes de paiement</span> ›{' '}
-        <span className="whitespace-nowrap text-ink">Ajouter une carte</span>
-      </p>
-      <div className="mt-3">
-        <Shots figures={ADD_CARD_FIGURES} />
-      </div>
+    <div className="mt-5">
+      <Shots figures={ADD_CARD_FIGURES} />
     </div>
   )
 }
@@ -1594,10 +1598,10 @@ export const CARD_NOTE = 'Une carte bancaire enregistrée dans PayByPhone est n�
 export function CardRequired({ children }: { children: ReactNode }) {
   return (
     <FullScreenNotice
-      title="Carte bancaire requise"
-      intro={<><PayByBot /> paie avec la carte bancaire de votre compte {withPayByPhone('PayByPhone')}.</>}
+      title="Ajoutez une carte bancaire dans PayByPhone"
       steps={[]}
     >
+      <NoWallets className="mt-2" />
       <AddCardGuide />
       {children}
     </FullScreenNotice>
