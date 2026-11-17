@@ -1522,6 +1522,72 @@ function Shots({ figures }: { figures: ReactNode[] }) {
   )
 }
 
+const SMS_FIGURES = [
+  shot('/how/paybyphone-parametres.webp', 'PayByPhone, Compte › Paramètres : Notifications relatives au stationnement', 394),
+  shot('/how/paybyphone-sms.webp', 'PayByPhone, Notifications : Rappel SMS et Confirmation par SMS désactivés', 394),
+]
+
+/** PayByPhone's paid SMS (confirmation, reminder): their state, read once, and the user's own switch. The switch
+ *  moves at once; if PayByPhone refuses, it goes back and the way to do it in the app is shown. `enabled` is
+ *  undefined while read, null when not known (then nothing is shown: never a guessed state). */
+export function useSms() {
+  const [enabled, setEnabled] = useState<boolean | null | undefined>(undefined)
+  const [busy, setBusy] = useState(false)
+  const [help, setHelp] = useState<boolean | null>(null) // the state the user asked for, when PayByPhone refused it
+  const read = () => api.sms().then((r) => setEnabled(r.enabled), () => setEnabled(null))
+  useEffect(() => {
+    read()
+  }, [])
+  async function toggle() {
+    if (enabled == null || busy) return
+    const to = !enabled
+    setEnabled(to)
+    setBusy(true)
+    try {
+      setEnabled((await api.setSms(to)).enabled)
+    } catch {
+      setEnabled(!to)
+      setHelp(to)
+    } finally {
+      setBusy(false)
+    }
+  }
+  // Done in PayByPhone's app: read again, so the switch shows what is really set.
+  return { enabled, busy, toggle, help, closeHelp: () => (setHelp(null), read()) }
+}
+
+/** The right side of the « SMS PayByPhone » line: they are paid, and the switch (the user's tap is his consent). */
+export function SmsSwitch({ sms }: { sms: ReturnType<typeof useSms> }) {
+  return (
+    <span className="inline-flex items-center gap-3">
+      <span className="text-sm text-ink/60">Payants</span>
+      <ToggleSwitch checked={!!sms.enabled} label="SMS PayByPhone payants" busy={sms.busy} disabled={sms.busy} onPress={sms.toggle} />
+    </span>
+  )
+}
+
+/** When PayByPhone refuses the change: where to do it in its app (Compte › Paramètres › Notifications). */
+export function SmsHelp({ wanted, onClose }: { /** On or off, as asked; null: closed. */ wanted: boolean | null; onClose: () => void }) {
+  return (
+    <Dialog open={wanted !== null} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className={cn(ui.dialog, 'sm:max-w-lg')}>
+        <div className="px-6 pt-7 pb-6">
+          <DialogTitle className={ui.dialogTitle}>
+            {wanted ? 'Activez' : 'Désactivez'} les SMS dans <PayByPhone />
+          </DialogTitle>
+          <DialogDescription className="mt-1 text-ink/60">Compte › Paramètres › Notifications relatives au stationnement</DialogDescription>
+          <div className="mt-5">
+            <Shots figures={SMS_FIGURES} />
+          </div>
+          <button onClick={onClose} className={cn(ui.primary, 'mt-6')}>
+            C’est fait
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 /** Said where a card is asked: Apple Pay and Google Pay are no card (a red cross, the words in red; no brand mark). */
 export function NoWallets({ className }: { className?: string }) {
   return (

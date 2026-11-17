@@ -524,6 +524,15 @@ test('renouvellement résident : s’active depuis la carte du véhicule', async
   await expect(page.getByRole('switch', { name: /Renouvellement/ }).first()).toBeChecked({ timeout: 15_000 })
 })
 
+test('mon compte : les SMS payants PayByPhone se coupent d’un geste de l’utilisateur', async ({ page }) => {
+  await demo(page)
+  await page.getByRole('button', { name: 'Mon compte' }).first().click()
+  const sms = page.getByRole('dialog').getByRole('switch', { name: 'SMS PayByPhone payants' })
+  await expect(sms).toBeChecked()
+  await sms.click({ force: true })
+  await expect(sms).not.toBeChecked()
+})
+
 test('mon compte : la carte bancaire et sa date de fin', async ({ page }) => {
   await demo(page)
   await page.getByRole('button', { name: 'Mon compte' }).first().click()
@@ -547,7 +556,9 @@ test('mon compte : les véhicules sans prix ni choix à faire', async ({ page })
   const dialog = page.getByRole('dialog')
   await expect(dialog.getByText('Paiement et contact')).toBeVisible()
   await expect(dialog.getByText(/€/)).toHaveCount(0) // no price here, per vehicle or otherwise
-  await expect(dialog.getByRole('switch')).toHaveCount(0)
+  // No choice per vehicle: the one switch is PayByPhone's paid SMS.
+  await expect(dialog.getByRole('switch')).toHaveCount(1)
+  await expect(dialog.getByRole('switch', { name: 'SMS PayByPhone payants' })).toBeVisible()
   await expect(dialog.getByRole('checkbox')).toHaveCount(0)
 })
 

@@ -4905,6 +4905,51 @@ def admin_stats(pbb_admin: str = Cookie(None)):
     return guarded(lambda: store("admin_stats"))
 
 
+class SmsSetting(BaseModel):
+    enabled: bool
+
+
+def sms_enabled(s):
+    """Whether one of PayByPhone's paid SMS is on for this account; None when PayByPhone does not say."""
+    try:
+        consents = s.call("get_sms_consents")
+    except Exception as e:  # never a guessed state: not shown
+        log.warning("sms consents unreadable: %s", str(e)[:200])
+        return None
+    return any(c.get("consentType") == "OptIn" for c in consents.values()) if consents else None
+
+
+@app.get("/api/sms")
+def sms_get(pbb_session: str = Cookie(None)):
+    """Whether PayByPhone's paid SMS (confirmation, reminder) are on for this account (null when not known)."""
+    s = current(pbb_session)
+    if s.demo:
+        return {"enabled": getattr(s, "sms_enabled", True)}
+    return {"enabled": sms_enabled(s)}
+
+
+@app.post("/api/sms")
+def sms_set(body: SmsSetting, pbb_session: str = Cookie(None)):
+    """The user turns PayByPhone's paid SMS off (or on again) himself: his tap is his consent. Answers what PayByPhone
+    keeps once done (read again), or 502 when it refused."""
+    s = current(pbb_session)
+    if s.demo:
+        s.sms_enabled = body.enabled
+        return {"enabled": s.sms_enabled}
+    try:
+        s.call("set_sms_consents", body.enabled)
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.warning("sms change refused: %s", str(e)[:200])
+        raise HTTPException(502, "PayByPhone n’a pas pris le changement.")
+    now = sms_enabled(s)
+    if now is None or now != body.enabled:
+        raise HTTPException(502, "PayByPhone n’a pas pris le changement.")
+    log.info("paid SMS turned %s by the user", "on" if body.enabled else "off")
+    return {"enabled": now}
+
+
 @app.get("/api/history")
 def history(pbb_session: str = Cookie(None)):
     """The tickets PayByBot paid, newest first: its own proofs (kept at each payment), never a ticket the user bought

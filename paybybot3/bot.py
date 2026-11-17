@@ -219,6 +219,30 @@ class Bot:
             default=None,
         )
 
+    # PayByPhone's paid SMS (0.15 to 0.25 € each): the confirmation after each ticket and the reminder before its end.
+    SMS_PURPOSES = ("SmsReceipts", "SmsReminders")
+
+    def get_sms_consents(self):
+        """The paid SMS as PayByPhone keeps them, among the member's consents: {purposeName: consent}, its
+        consentType « OptIn » (on) or « OptOut » (off)."""
+        data = self._graphql("query GetMemberConsentsV1 { getMemberConsentsV1 { "
+                             "purposeName purposeVersion purposeLanguage consentType } }")
+        return {c["purposeName"]: c for c in data.get("getMemberConsentsV1") or [] if c.get("purposeName") in self.SMS_PURPOSES}
+
+    def set_sms_consents(self, enabled):
+        """Turns both paid SMS on or off, as the PayByPhone app does (its consent update, in the member's name)."""
+        known = self.get_sms_consents()
+        consents = [{"purposeName": name, "purposeVersion": (known.get(name) or {}).get("purposeVersion") or "v1",
+                     "purposeLanguage": (known.get(name) or {}).get("purposeLanguage") or "fr-FR",
+                     "consentType": "OptIn" if enabled else "OptOut", "consentData": None} for name in self.SMS_PURPOSES]
+        data = self._graphql(
+            "mutation CreateMemberConsentsV1($input: CreateMemberConsentsV1Input!) { "
+            "createMemberConsentsV1(input: $input) { generalResponse { success message } } }",
+            {"input": {"request": {"collectionMethod": "WebApp", "country": "FR", "consents": consents}}})
+        answer = (data.get("createMemberConsentsV1") or {}).get("generalResponse") or {}
+        if answer.get("success") is False:
+            raise RuntimeError("PayByPhone refused the SMS change: %s" % answer.get("message"))
+
     def get_payment_accounts(self):
         query = """query GetPaymentAccountsV1($input: GetPaymentAccountsInput!) {
   getPaymentAccountsV1(input: $input) {%s

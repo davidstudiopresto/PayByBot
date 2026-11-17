@@ -711,7 +711,7 @@ export function Dashboard({
         {/* What PayByBot has done for the account, said once it has done something (the reason to stay). */}
         {taken > 0 && (
           <p className="mt-10 text-center text-sm text-ink/60">
-            <PayByBot /> a déjà pris <span className="font-semibold text-ink">{taken} ticket{taken > 1 ? 's' : ''}</span> pour vous.
+            <PayByBot /> a déjà pris <span className="font-semibold text-ink">{taken} ticket{taken > 1 ? 's' : ''}</span> pour vous&nbsp;!
           </p>
         )}
       </main>

@@ -202,6 +202,9 @@ export const api = {
   myInvite: () => request<{ code: string; url: string }>('/api/invite'),
   /** The tickets PayByBot took (running and past), newest first. */
   history: () => request<Session[]>('/api/history'),
+  /** PayByPhone's paid SMS: on, off, or null when not known (then not shown). */
+  sms: () => request<{ enabled: boolean | null }>('/api/sms'),
+  setSms: (enabled: boolean) => post<{ enabled: boolean }>('/api/sms', { enabled }),
   requestAccess: (email: string, turnstile = '') => post<{ ok: boolean }>('/api/access', { email, turnstile }),
   me: () => request<Me>('/api/me').then((m) => ((signedIn = !!m?.username), m), (e) => ((signedIn = false), Promise.reject(e))),
   login: (

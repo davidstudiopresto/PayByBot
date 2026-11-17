@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { ui } from '@/lib/styles'
 import { LineBone, PlateBone } from '@/components/Skeletons'
 import { SmoothHeight } from '@/components/ui/smooth-height'
-import { activateWeekly, AddCardGuide, NoWallets, clearPending, savePending, savePlateAfterPay, when, type PendingRenewal } from '@/components/Riverain'
+import { activateWeekly, AddCardGuide, NoWallets, clearPending, savePending, savePlateAfterPay, when, type PendingRenewal, SmsHelp, SmsSwitch, useSms } from '@/components/Riverain'
 import { PlansDialog } from '@/components/Pricing'
 
 /** +33612345678 -> +33 6 12 34 56 78 (other formats are shown as they are). */
@@ -100,6 +100,7 @@ export function Welcome({
   const [plans, setPlans] = useState<PendingRenewal[] | null>(null)
   const [afterPay, setAfterPay] = useState<string | null>(null)
   const n = vehicles?.length ?? 0
+  const sms = useSms()
   const zones = [...new Set((vehicles ?? []).flatMap((v) => (v.zone ? [v.zone] : [])))]
 
   // PayByBot pays with a card saved on PayByPhone (not Apple Pay, Google Pay or PayPal), not expired: without one
@@ -215,7 +216,14 @@ export function Welcome({
                   <span className="font-heading font-medium text-destructive">Aucune</span>
                 )}
               </Line>
+              {/* PayByPhone's paid SMS, only when their state is known: the user turns them off himself. */}
+              {sms.enabled != null && (
+                <Line label="SMS PayByPhone">
+                  <SmsSwitch sms={sms} />
+                </Line>
+              )}
             </dl>
+            <SmsHelp wanted={sms.help} onClose={sms.closeHelp} />
 
             {/* Only when something blocks: what to do, in one place. */}
             {vehicles !== undefined && !vehicles.length && (

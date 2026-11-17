@@ -9,6 +9,7 @@ import { LineBone, PlateBone } from '@/components/Skeletons'
 import { ui } from '@/lib/styles'
 import { SmoothHeight } from '@/components/ui/smooth-height'
 import { PlansDialog } from '@/components/Pricing'
+import { SmsHelp, SmsSwitch, useSms } from '@/components/Riverain'
 
 /** "Mon compte" in the top bar: what PayByBot reads from the PayByPhone account, the home zone and e-mail. */
 export function AccountButton({
@@ -60,6 +61,7 @@ function AccountDialog({
 }) {
   const [email, setEmail] = useState<string | undefined>(undefined)
   const [deleting, setDeleting] = useState(false)
+  const sms = useSms()
   const [plans, setPlans] = useState(false)
   const [account, setAccount] = useState<Account | null | undefined>(undefined)
   // Only the « riverain » vehicles, each with the arrondissement PayByPhone gives it the resident rate in (never
@@ -222,10 +224,17 @@ function AccountDialog({
                     <span className="text-ink/60">Aucune</span>
                   )}
                 </Row>
+                {/* PayByPhone's paid SMS, only when their state is known: the user turns them off himself. */}
+                {sms.enabled != null && (
+                  <Row label="SMS PayByPhone">
+                    <SmsSwitch sms={sms} />
+                  </Row>
+                )}
                 {login && <Row label={login.includes('@') ? 'Identifiant' : 'Téléphone'}>{phoneText(login)}</Row>}
                 <Row label="E-mail">{email === undefined ? <LineBone className="ml-auto w-44" /> : email || '—'}</Row>
               </Rows>
             </Section>
+            <SmsHelp wanted={sms.help} onClose={sms.closeHelp} />
 
             {!demo && (
               <button onClick={() => setDeleting(true)} className="text-sm font-medium text-destructive/80 underline-offset-[3px] transition hover:text-destructive hover:underline">
