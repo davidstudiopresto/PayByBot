@@ -22,7 +22,7 @@ const FEATURES: Question[] = [
 const FEATURE_ICONS = [RefreshCw, Pause, BellRing, Headset]
 
 /** Each step's screen (demo account, captured at one size: 1040 × 940). */
-const STEP_SHOTS = ['/how/1-connexion.png?v=17', '/how/2-activation.png?v=17', '/how/3-tableau-de-bord.png?v=18']
+const STEP_SHOTS = ['/how/1-connexion.png?v=19', '/how/2-activation.png?v=17', '/how/3-tableau-de-bord.png?v=18']
 
 /**
  * Real users' feedback only, given with their consent: [first name and last-name initial, e.g. « Charles H. », one sentence].
@@ -64,6 +64,14 @@ export function HowItWorks({ page = false, cta }: { page?: boolean; /** Under th
   const [active, setActive] = useState(0)
   // Only the arrows move from a step to the next (nothing moves by itself).
   const go = (i: number) => setActive((i + DEMO_STEPS.length) % DEMO_STEPS.length)
+  // From step 1 to step 2: « C'est bien moi » is pressed first, as by a finger, then step 2 comes.
+  const [pressing, setPressing] = useState(false)
+  const next = () => {
+    if (pressing) return
+    if (active !== 0 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return go(active + 1)
+    setPressing(true)
+    setTimeout(() => (setPressing(false), go(1)), 450)
+  }
   const Title = page ? 'h1' : 'h2'
 
   return (
@@ -81,7 +89,7 @@ export function HowItWorks({ page = false, cta }: { page?: boolean; /** Under th
               <button type="button" onClick={() => go(active - 1)} aria-label="Étape précédente" className="grid size-10 place-items-center rounded-full text-eu transition hover:bg-eu/[0.08]">
                 <ArrowRight className="size-5 rotate-180" />
               </button>
-              <button type="button" onClick={() => go(active + 1)} aria-label="Étape suivante" className="grid size-10 place-items-center rounded-full text-eu transition hover:bg-eu/[0.08]">
+              <button type="button" onClick={next} aria-label="Étape suivante" className="grid size-10 place-items-center rounded-full text-eu transition hover:bg-eu/[0.08]">
                 <ArrowRight className="size-5" />
               </button>
             </div>
@@ -111,6 +119,7 @@ export function HowItWorks({ page = false, cta }: { page?: boolean; /** Under th
             ))}
             {/* Steps 2 and 3 share one card: its switch is off on step 2 and slides on as step 3 comes. */}
             <ShotSwitch shown={active > 0} on={active === 2} />
+            <ShotPress shown={active === 0} pressed={pressing} />
           </div>
           </div>
 
@@ -159,6 +168,32 @@ function useShotScale(ref: RefObject<HTMLDivElement | null>) {
 /** The real switch laid over the pictures of steps 2 and 3, at the same place and scale (the picture: a 520 × 470
  *  window, the switch 48 × 24 at 439, 239): off on step 2, it slides on as step 3 comes, and off again back on step 2.
  *  Only a picture: not focusable, not read. */
+/** « C'est bien moi », laid over step 1's picture at its place (476 × 48 at 22, 254 in the 520-wide picture): pressed
+ *  as step 2 is asked for (a light fill, a little smaller). Only a picture: not focusable, not read. */
+function ShotPress({ shown, pressed }: { shown: boolean; pressed: boolean }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const scale = useShotScale(ref)
+  return (
+    <div
+      ref={ref}
+      aria-hidden
+      inert
+      className={cn('pointer-events-none absolute origin-top-left bg-white transition-opacity duration-300', shown ? 'opacity-100' : 'opacity-0')}
+      // 3 px wider all round than the picture's button, so none of it shows while pressed.
+      style={{ top: 251 * scale, left: 19 * scale, width: 482, height: 54, padding: 3, transform: `scale(${scale})` }}
+    >
+      <div
+        className={cn(
+          'flex size-full items-center justify-center rounded-xl border-[1.5px] border-eu text-[1.05rem] font-bold text-eu transition duration-150',
+          pressed ? 'scale-[0.97] bg-eu/[0.10]' : 'bg-white',
+        )}
+      >
+        C’est bien moi
+      </div>
+    </div>
+  )
+}
+
 function ShotSwitch({ shown, on }: { shown: boolean; on: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
   const scale = useShotScale(ref)
