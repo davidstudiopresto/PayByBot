@@ -121,8 +121,7 @@ function CmisAttest({ checked, onChange }: { checked: boolean; onChange: (v: boo
     <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-ink/[0.03] px-4 py-3 text-sm leading-relaxed text-ink/60">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-1 size-4 shrink-0 accent-[#4e9aa0]" />
       <span>
-        Je suis titulaire d’une carte mobilité inclusion mention stationnement (CMI-S) et je la place derrière le
-        pare-brise. Sans elle, ce ticket gratuit ne me couvre pas.
+        Je suis titulaire d’une carte CMI-S, placée derrière le pare-brise.
       </span>
     </label>
   )

@@ -599,8 +599,8 @@ export function Dashboard({
             : running.length
               ? // One card: « Votre ticket en cours », several (running or programmed): « Vos tickets ».
                 sessions.length + shownDaily > 1
-                ? 'Vos tickets en cours :'
-                : 'Votre ticket en cours :'
+                ? 'Vos tickets en cours'
+                : 'Votre ticket en cours'
               : nextPlanned
                 ? `Aucun ticket en cours : le prochain est prévu ${whenAt(nextPlanned)}.`
                 : "Aucun véhicule n'est couvert en ce moment."}
