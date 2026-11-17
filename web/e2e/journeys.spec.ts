@@ -31,7 +31,7 @@ const timeShown = async (page: Page) => (await hourBoxes(page).allInnerTexts()).
 
 /** The button that opens the ticket wizard (its name follows the offer: « Programmer un ticket », « Carte mobilité… »). */
 const wizardButton = (page: Page) =>
-  page.getByRole('button', { name: /Programmer un ticket|Carte mobilité/ }).first()
+  page.getByRole('button', { name: /^Automatiser$|Carte mobilité/ }).last()
 
 test('sans lien : le site reste flouté, le lien se demande par e-mail', async ({ page }) => {
   await page.goto('/')
@@ -102,7 +102,7 @@ test('sans voiture résidente ni ticket : pas de carte « Non couvert », le bou
   await page.keyboard.press('Escape') // the wizard opens by itself on a first visit without a resident car
   await expect(page.getByText('Non couvert')).toHaveCount(0)
   await expect(page.getByText('Votre stationnement n\'est pas encore automatisé.')).toBeVisible()
-  await page.getByRole('button', { name: 'Programmer un ticket' }).last().click()
+  await wizardButton(page).click()
   await expect(page.getByText(/Étape 1 sur/)).toBeVisible()
 })
 
@@ -121,11 +121,11 @@ async function oneTicket(page: Page, keep: (v: { plate: string }) => boolean) {
   })
 }
 
-test('tableau de bord : le gros bouton « Programmer un ticket » ouvre l’assistant', async ({ page }) => {
-  await oneTicket(page, (v) => /AB.?123.?CD/.test(v.plate))
+test('tableau de bord : « Automatiser » d’un autre véhicule ouvre l’assistant', async ({ page }) => {
+  await oneTicket(page, (v) => /AB.?123.?CD|GH.?456/.test(v.plate))
   await demo(page)
   await expect(page.getByRole('button', { name: 'Renouveler un autre véhicule' })).toHaveCount(0)
-  await page.getByRole('button', { name: 'Programmer un ticket' }).last().click() // the big one (the top bar's has the same name)
+  await wizardButton(page).click()
   await expect(page.getByRole('dialog').getByText(/Étape 1 sur/)).toBeVisible()
 })
 
@@ -150,39 +150,10 @@ test('assistant : une voiture résidente déjà renouvelée se voit, mais ne se 
   await page.getByRole('button', { name: 'Automatiser' }).first().click() // the resident car's line: its renewal
   await page.getByRole('dialog').getByRole('button', { name: /^Activer le renouvellement/ }).click()
   await expect(page.getByRole('switch', { name: /Renouvellement/ }).first()).toBeChecked({ timeout: 15_000 })
-  await page.getByRole('button', { name: 'Programmer un ticket' }).last().click() // the big one (the top bar's has the same name)
+  await wizardButton(page).click()
   const wizard = page.getByRole('dialog')
   await expect(wizard.getByRole('button', { name: /AB-123-CD/ })).toBeDisabled()
-  await expect(wizard.getByRole('button', { name: /GH-456-JK/ })).toHaveAttribute('aria-pressed', 'true')
-})
-
-test('sans abonnement : « Programmer un ticket » ouvert avant le tarif résident n’est pas recouvert par le renouvellement', async ({ page }) => {
-  // Online, no subscription yet, a resident car without renewal: once its resident rate is known, its renewal opens
-  // by itself. The owner clicked « Programmer un ticket » before that: the wizard stays, nothing opens over it.
-  for (const url of ['**/api/me', '**/api/login'])
-    await page.route(url, async (route) => {
-      const answer = await route.fetch()
-      const json = await answer.json()
-      await route.fulfill({ response: answer, json: json.username ? { ...json, demo: false, hosted: true } : json })
-    })
-  await page.route('**/api/account', (route) =>
-    route.fulfill({ json: { email: 'a@b.fr', zone: '75105', subscribed: false, trialEnd: new Date(Date.now() + 16 * 86_400_000).toISOString() } }),
-  )
-  let release = () => {}
-  const priced = new Promise<void>((r) => (release = r))
-  await page.route('**/api/pricing', async (route) => {
-    const answer = await route.fetch()
-    await priced // the resident rate arrives late
-    await route.fulfill({ response: answer })
-  })
-  await page.goto(LINK + '#demo')
-  await page.getByRole('button', { name: 'Programmer un ticket' }).first().click()
-  await expect(page.getByRole('dialog').getByText('Pris automatiquement les jours choisis')).toBeVisible()
-  release()
-  await page.waitForResponse('**/api/pricing')
-  await page.waitForTimeout(800)
-  await expect(page.getByRole('dialog').getByText('Pris automatiquement les jours choisis')).toBeVisible()
-  await expect(page.getByText('Renouvellement hebdomadaire')).toHaveCount(0)
+  await expect(wizard.getByRole('button', { name: /LM-789-NP/ })).toHaveAttribute('aria-pressed', 'true') // the car whose « Automatiser » was clicked
 })
 
 test('accueil : activer l’interrupteur de l’exemple mène à l’inscription', async ({ page }) => {
@@ -322,7 +293,7 @@ test('impasses : carte expirée, l’assistant le dit dès le choix du véhicule
     await route.fulfill({ response: r, json })
   })
   await demo(page)
-  await page.getByRole('button', { name: 'Programmer un ticket' }).last().click() // the big one (the top bar's has the same name)
+  await wizardButton(page).click()
   const wizard = page.getByRole('dialog')
   await expect(wizard.getByText('Votre carte bancaire PayByPhone a expiré.', { exact: false })).toBeVisible()
   await expect(wizard.getByRole('button', { name: 'Suivant', exact: true })).toBeDisabled()

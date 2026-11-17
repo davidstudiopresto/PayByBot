@@ -1,7 +1,7 @@
 import { Loading } from '@/components/Loading'
 import { useEffect, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
-import { LogOut, Plus } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { PayByPhone, Plate, withPayByPhone } from '@/components/signs'
 import { TopBar } from '@/components/TopBar'
 import { InviteButton } from '@/components/Invite'
@@ -463,12 +463,6 @@ export function Dashboard({
   useEffect(() => {
     if (renewing) setAutoUsed(true)
   }, [renewing])
-  // Something left to programme: a car without a weekly renewal (a resident one to renew, or tickets on chosen days
-  // for the others). Every car renewed each week (only resident cars can be): « Programmer… » would lead nowhere, so
-  // it is hidden. Known from the account alone, without waiting for the tariffs: it never shows, then goes.
-  const programmable =
-    !!data &&
-    data.vehicles.some((v) => !data.autopilots.some((ap) => ap.label === WEEKLY_LABEL && plateKey(ap.plate) === plateKey(v.plate)))
   // Right after the welcome page, nothing renewed yet: the renewal of the car with a ticket (else the first car)
   // opens by itself, then the offer comes when it is activated.
   // Online, no offer chosen yet: PayByBot is not usable before choosing one. With a resident vehicle, its renewal
@@ -576,16 +570,6 @@ export function Dashboard({
         )}
         {/* Inviting a friend: always offered to a signed-in account (word of mouth is the only way in). */}
         {/* Programming a non-resident ticket: a sober button beside the invitation, no card in the page. */}
-{programmable && !paused && (
-        <button
-          onClick={() => (setBackPlate(undefined), setProgramAsked((n) => n + 1))}
-          disabled={!data}
-          aria-label="Programmer un ticket"
-          className={cn(ui.pillGray, 'gap-2')}
-        >
-          <Plus className="size-4" /> <span className="hidden lg:inline">Programmer un ticket</span>
-        </button>
-        )}
         {!me.demo && <InviteButton disabled={!data} />}
         <AccountButton data={data} onDeleted={onDeleted ?? onLogout} demo={me.demo} />
         <button onClick={onLogout} className={ui.navText} aria-label="Déconnexion">
