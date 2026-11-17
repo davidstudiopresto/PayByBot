@@ -1122,7 +1122,7 @@ export function AdminPage(_: { signedIn?: boolean }) {
             </div>
             {clients && (
               <p className="text-sm text-ink/50">
-                PayByBot · <span className="font-semibold text-ink tabular-nums">9,50 €</span> par mois et par compte, tous véhicules compris
+                PayByBot · <span className="font-semibold text-ink tabular-nums">5,50 €</span> par mois et par compte, tous véhicules compris
               </p>
             )}
           </header>

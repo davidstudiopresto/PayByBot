@@ -10,7 +10,7 @@ export function SmoothHeight({ children, className }: { children: ReactNode; cla
   useLayoutEffect(() => {
     const el = inner.current
     if (!el) return
-    const watch = new ResizeObserver(() => setHeight(el.offsetHeight))
+    const watch = new ResizeObserver(() => setHeight(Math.ceil(el.getBoundingClientRect().height)))
     watch.observe(el)
     return () => watch.disconnect()
   }, [])

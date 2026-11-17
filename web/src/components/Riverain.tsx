@@ -83,12 +83,7 @@ export function activationToast(activation: Activation, plate?: string) {
     toast.error(plate ? `${plate} : ${activation.title}` : activation.title, {
       description: 'La raison est affichée sous votre véhicule.',
     })
-    return
   }
-  toast.success(plate ? `${plate} : ${activation.title}` : activation.title, {
-    // Short on screen: what happens if a payment fails is in the e-mail.
-    description: activation.text,
-  })
 }
 
 /** Back from Stripe with a subscription: activate the renewals chosen before leaving. */
@@ -111,7 +106,6 @@ export async function runPendingRenewals(): Promise<{ done: number; weekly: numb
       const { activation } = await api.addAutopilot({ label: WEEKLY_LABEL, ...p } as Parameters<typeof api.addAutopilot>[0])
       if (p.days?.length) {
         // A non-resident ticket on precise days: nothing paid now, the first ticket comes on its day.
-        toast.success(items.length > 1 ? `${p.plate} : ticket programmé.` : 'Ticket programmé.')
         shown += 1
         continue
       }
@@ -153,8 +147,7 @@ export async function relaunch(ap: Autopilot, onChanged: () => void) {
   try {
     const after = await api.resumeAutopilot(ap.id)
     if (after.lastError) toast.error('Renouvellement non effectué', { id: waiting, description: 'La raison est affichée sous votre véhicule.' })
-    else if (after.lastPayment) toast.success('Forfait renouvelé.', { id: waiting })
-    else toast.success('Renouvellement relancé.', { id: waiting, description: 'Un ticket est déjà en cours : il prendra le relais à sa fin.' })
+    else toast.dismiss(waiting)
   } catch (e) {
     toast.error((e as Error).message, { id: waiting })
   }
@@ -242,6 +235,9 @@ function useSlideOff(setConfirming: (open: boolean) => void, on: boolean) {
   return { leaving, setLeaving, ask, closed }
 }
 
+/** What stopping changes, said for this car: covered until the ticket ends, then not any more. */
+const stopText = (plate: string) => `Le ticket en cours reste valable jusqu’à sa fin. Ensuite, ${plate} ne sera plus couvert.`
+
 /** Under a ticket: the vacation pause (planned, or a link to plan one), then the way to stop, in red. */
 const actionBtn = 'flex h-11 w-full items-center justify-center gap-2 rounded-xl border font-semibold transition active:scale-[0.99] sm:w-auto sm:px-5'
 
@@ -252,7 +248,6 @@ export function RenewalActions({
   withStop = true,
   withPause = true,
   stopLabel = 'Arrêter le renouvellement',
-  stoppedText = 'Renouvellement arrêté.',
   switchLabel,
   aside,
   detail,
@@ -267,7 +262,6 @@ export function RenewalActions({
   stopLabel?: string
   /** A single programmed ticket: nothing to pause. */
   withPause?: boolean
-  stoppedText?: string
   /** On the switch's line, before it (a CMI-S ticket's « Modifier », its card having no details below). */
   aside?: React.ReactNode
   /** Under the switch's label (a CMI-S ticket's « Prochain : … », as on a resident card). */
@@ -290,7 +284,6 @@ export function RenewalActions({
     }
     try {
       await api.resumeAutopilot(ap.id)
-      toast.success(paused ? 'Renouvellement repris.' : 'Pause annulée.')
     } catch (e) {
       toast.error((e as Error).message)
     }
@@ -303,7 +296,6 @@ export function RenewalActions({
     setBusy(true)
     try {
       await api.deleteAutopilot(ap.id)
-      toast.success(stoppedText, { description: 'Le ticket en cours reste valable.' })
     } catch (e) {
       toast.error((e as Error).message)
       slide.setLeaving(false)
@@ -338,7 +330,7 @@ export function RenewalActions({
           open={confirming}
           onOpenChange={slide.closed}
           title={`${stopLabel} ?`}
-          description="Le ticket en cours reste valable jusqu’à sa fin. Aucun nouveau ticket ne sera pris."
+          description={stopText(ap.plate)}
           confirmLabel={stopLabel}
           onConfirm={stop}
           busy={busy}
@@ -388,7 +380,7 @@ export function RenewalActions({
         open={confirming}
         onOpenChange={slide.closed}
         title={`${stopLabel} ?`}
-        description="Le ticket en cours reste valable jusqu’à sa fin. Aucun nouveau ticket ne sera pris."
+        description={stopText(ap.plate)}
         confirmLabel={stopLabel}
         onConfirm={stop}
         busy={busy}
@@ -408,7 +400,6 @@ export function ManageRenewal({ ap, onChanged, demo = false }: { ap: Autopilot; 
     if (ap.enabled) {
       try {
         await api.resumeAutopilot(ap.id)
-        toast.success('Renouvellement repris.')
       } catch (e) {
         toast.error((e as Error).message)
       }
@@ -421,7 +412,6 @@ export function ManageRenewal({ ap, onChanged, demo = false }: { ap: Autopilot; 
   async function stop() {
     try {
       await api.deleteAutopilot(ap.id)
-      toast.success('Renouvellement hebdomadaire arrêté.', { description: 'Le ticket en cours reste valable.' })
     } catch (e) {
       toast.error((e as Error).message)
     }
@@ -482,7 +472,6 @@ export async function activateWeekly(cars: { plate: string; zone: string; type?:
       const { activation } = await api.addAutopilot({ ...p, label: WEEKLY_LABEL })
       saveLast(p)
       if (activation) activationToast(activation, cars.length > 1 ? car.plate : undefined)
-      else toast.success('Renouvellement hebdomadaire activé.')
       done += 1
     } catch (e) {
       // No free month left: the subscription first; this renewal is kept and activated on the way back from Stripe.
@@ -719,7 +708,6 @@ export function RenewalSwitch({
     setBusy(true)
     try {
       await api.deleteAutopilot(ap.id)
-      toast.success('Renouvellement arrêté.', { description: 'Le ticket en cours reste valable.' })
     } catch (e) {
       toast.error((e as Error).message)
       slide.setLeaving(false)
@@ -1002,8 +990,6 @@ export function RiverainDialog({
   }
 
   const samePlate = (a: string, b: string) => a.replace(/[^0-9a-z]/gi, '').toUpperCase() === b.replace(/[^0-9a-z]/gi, '').toUpperCase()
-  const runningFor = (plate: string) =>
-    !!found[plate]?.quote?.afterCurrent || data.sessions.some((s) => samePlate(s.plate, plate) && new Date(s.expire).getTime() > Date.now())
   const ok = selected.filter((plate) => found[plate]?.rate && found[plate]?.quote)
 
   function toggle(plate: string) {
@@ -1046,11 +1032,6 @@ export function RiverainDialog({
     const done = ok.length - failed.length
     if (done) {
       if (!shown)
-        toast.success(done > 1 ? `Renouvellement activé pour ${done} véhicules.` : 'Renouvellement hebdomadaire activé.', {
-          description: ok.some(runningFor)
-            ? 'Chaque renouvellement prend le relais à la fin du ticket en cours.'
-            : 'La première semaine est en cours de paiement.',
-        })
       setTimeout(onDone, 2500)
       onDone()
     }
@@ -1281,7 +1262,6 @@ function EmailDialog({ ap, demo, onClose, onDone }: { ap: Autopilot; demo: boole
     setError(null)
     try {
       await api.setAutopilotEmail(ap.id, value)
-      toast.success(value ? 'Les confirmations seront envoyées à cette adresse.' : 'Vous ne recevrez plus d’e-mails.')
       onClose()
       onDone()
     } catch (e) {
@@ -1353,9 +1333,6 @@ function PauseDialog({ ap, onClose, onDone }: { ap: Autopilot; onClose: () => vo
     setError(null)
     try {
       await api.pauseAutopilot(ap.id, start, noEnd ? null : end)
-      toast.success('Pause enregistrée.', {
-        description: noEnd ? 'Reprenez quand vous voulez depuis le tableau de bord.' : 'Le renouvellement reprendra tout seul.',
-      })
       onClose()
       onDone()
     } catch (e) {

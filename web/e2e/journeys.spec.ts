@@ -511,7 +511,8 @@ test('retour de paiement : un ticket programmé n’affiche pas « automatisé �
   await page.evaluate(() => localStorage.setItem('pbb-pending-renewals', JSON.stringify({ at: Date.now(), items: [{ plate: 'AB123CD', days: [0], location: '69000', rate: '102', duration: 1, unit: 'Hours', paymentAccountId: 'demo-card' }] })))
   await page.evaluate(() => { window.location.hash = '#session_id=cs_test' })
   await page.reload()
-  await expect(page.getByText('Ticket programmé').first()).toBeVisible()
+  // The pending ticket is programmed (taken off the waiting list), with no « automatisé » message.
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('pbb-pending-renewals'))).toBeNull()
   await expect(page.getByText('Votre stationnement est désormais automatisé')).toBeHidden()
 })
 
@@ -533,12 +534,12 @@ test('mon compte : la carte bancaire et sa date de fin', async ({ page }) => {
 })
 
 test('mon compte : les véhicules sans prix ni choix à faire', async ({ page }) => {
-  const vehicle = (plate: string) => ({ plate, zone: '75105', monthly: 950, yearly: 9120, renewed: false })
+  const vehicle = (plate: string) => ({ plate, zone: '75105', monthly: 550, yearly: 5280, renewed: false })
   await page.route('**/api/account', (route) =>
     route.fulfill({ json: { email: 'a@b.fr', zone: '75105', plan: 'yearly', subscribed: true } }),
   )
   await page.route('**/api/pricing', (route) =>
-    route.fulfill({ json: { zone: '75105', monthly: 950, yearly: 9120, billing: true, billed: ['AB-123-CD', 'GH-456-JK', 'LM-789-NP'],
+    route.fulfill({ json: { zone: '75105', monthly: 550, yearly: 5280, billing: true, billed: ['AB-123-CD', 'GH-456-JK', 'LM-789-NP'],
       vehicles: [vehicle('AB-123-CD'), vehicle('GH-456-JK'), vehicle('LM-789-NP')] } }),
   )
   await demo(page)
@@ -552,9 +553,9 @@ test('mon compte : les véhicules sans prix ni choix à faire', async ({ page })
 
 test('programmer un ticket : un seul véhicule à la fois, sans paiement en plus', async ({ page }) => {
   const programmed: string[] = []
-  const vehicle = (plate: string) => ({ plate, zone: null, monthly: 950, yearly: 9120, renewed: false })
+  const vehicle = (plate: string) => ({ plate, zone: null, monthly: 550, yearly: 5280, renewed: false })
   await page.route('**/api/pricing', (route) =>
-    route.fulfill({ json: { zone: null, monthly: 950, yearly: 9120, billing: true, billed: ['AB-123-CD', 'GH-456-JK', 'LM-789-NP'],
+    route.fulfill({ json: { zone: null, monthly: 550, yearly: 5280, billing: true, billed: ['AB-123-CD', 'GH-456-JK', 'LM-789-NP'],
       vehicles: [vehicle('AB-123-CD'), vehicle('GH-456-JK'), vehicle('LM-789-NP')] } }),
   )
   page.on('request', (r) => r.method() === 'POST' && r.url().endsWith('/api/autopilots') && programmed.push(r.postDataJSON().plate))
@@ -723,7 +724,7 @@ test('impasses : arrêter le renouvellement juste après la bienvenue ne rouvre 
   await press(page, /Renouvellement/)
   const ask = page.getByRole('alertdialog')
   await ask.getByRole('button', { name: 'Arrêter le renouvellement' }).click()
-  await expect(page.getByText('Renouvellement arrêté.')).toBeVisible()
+  await expect(renewal).not.toBeChecked()
   await page.waitForTimeout(1500)
   await expect(page.getByRole('dialog')).toHaveCount(0)
 })

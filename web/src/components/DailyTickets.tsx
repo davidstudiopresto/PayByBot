@@ -105,7 +105,6 @@ async function takeTickets(ap: Autopilot, onChanged: () => void) {
   }
   setTaking(ap.id, { ...last, busy: false })
   // Only good news pops up; anything left to say stays on the card, in plain words.
-  if (last.covered >= last.total) toast.success(last.total > 1 ? `Tickets pris : ${last.total} arrondissements couverts.` : 'Ticket pris.')
 }
 
 /** The first question: the vehicle's type, which says the rate. */
@@ -321,9 +320,8 @@ function DailyCard({ ap, data, onChanged, needsOffer }: { ap: Autopilot; data: O
                 </span>
               ) : undefined
             }
-            stopLabel={single ? 'Annuler ce ticket' : 'Arrêter ces tickets'}
+            stopLabel={single ? 'Annuler ce ticket' : 'Arrêter le renouvellement'}
             switchLabel={single ? 'Ticket programmé' : 'Renouvellement auto'}
-            stoppedText={single ? 'Ticket annulé.' : 'Tickets arrêtés.'}
           />
         )}
       </div>
@@ -988,10 +986,6 @@ export function DailyWizard({
     try {
       const made: Autopilot[] = []
       for (const p of picked) made.push(await api.addAutopilot(rule(p) as Parameters<typeof api.addAutopilot>[0]))
-      const first = nextTicket(ruleDays, start, chainFrom, period)
-      toast.success(chainFrom ? 'Renouvellement activé.' : picked.length > 1 ? `${picked.length} tickets programmés.` : 'Ticket programmé.', {
-        description: takeNow ? 'Prise du ticket en cours : suivez-la sur la carte.' : first ? `Prochain ticket ${when(first)}.` : undefined,
-      })
       onDone()
       onClose()
       if (takeNow) for (const ap of made) void takeTickets(ap, onDone) // the window closes at once
@@ -1008,7 +1002,6 @@ export function DailyWizard({
     setSaving(true)
     try {
       const ap = await api.editAutopilot(editing!.id, rule() as Parameters<typeof api.editAutopilot>[1])
-      toast.success('Ticket modifié.', { description: takeNow ? 'Prise du ticket en cours : suivez-la sur la carte.' : undefined })
       onDone()
       onClose()
       if (takeNow) void takeTickets(ap, onDone)

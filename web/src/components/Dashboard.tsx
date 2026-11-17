@@ -372,15 +372,11 @@ export function Dashboard({
               // « Renouvellement auto » is only true of a weekly renewal: a programmed ticket has its own word.
               if (weekly) setCheckoutDone(true)
               if (!shown)
-                toast.success(renewed > 1 ? `Renouvellement activé pour ${renewed} véhicules.` : 'Renouvellement activé.')
               onRefresh()
             } else if (!failed.length) {
               const plate = takePlateAfterPay()
               // A car chosen before paying (welcome page, free month used up): its ticket wizard, at once.
-              if (plate) return (setBackPlate(plate), setProgramAsked((n) => n + 1), toast.success('Votre compte est activé.'))
-              toast.success('Votre compte est activé.', {
-                description: 'Activez maintenant le renouvellement de votre véhicule ou programmez un ticket.',
-              })
+              if (plate) return (setBackPlate(plate), setProgramAsked((n) => n + 1))
             }
             if (failed.length) toast.error(failed.join('\n'))
           },

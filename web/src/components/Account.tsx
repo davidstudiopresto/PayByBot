@@ -178,7 +178,7 @@ function AccountDialog({
                     // stays short enough to be seen whole).
                     <li className={rowClass}>
                       <span className="min-w-0">
-                        <span className="block text-ink">{account.plan ? 'Mensuel · 9,50 € / mois' : 'Mois offert'}</span>
+                        <span className="block text-ink">{account.plan ? 'Mensuel · 5,50 € / mois' : 'Mois offert'}</span>
                         {!account.plan && (
                           <span className={cn('block text-sm whitespace-nowrap', account.blocked === 'trialOver' ? 'text-destructive' : 'text-ink/60')}>
                             {account.blocked === 'trialOver'
@@ -299,9 +299,6 @@ function DeleteConfirm({ data, onCancel, onDeleted }: { data: Overview; onCancel
     setBusy(true)
     try {
       await api.deleteData()
-      toast.success('Votre compte PayByBot est supprimé.', {
-        description: 'Une confirmation vous est envoyée par e-mail.',
-      })
       onDeleted() // straight back to the home page, without reloading
     } catch (e) {
       toast.error((e as Error).message)

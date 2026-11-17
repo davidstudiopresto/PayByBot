@@ -28,9 +28,6 @@ export function SubscriptionDialog({ onClose }: { onClose: () => void }) {
     setBusy('cancel')
     try {
       setSub(await api.cancelSubscription(stop))
-      toast.success(stop ? 'Abonnement résilié.' : 'Abonnement conservé.', {
-        description: stop ? 'Il reste actif jusqu’à la fin de la période payée.' : undefined,
-      })
       setConfirming(false)
     } catch (e) {
       toast.error((e as Error).message)

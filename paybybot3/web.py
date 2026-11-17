@@ -3629,7 +3629,7 @@ WEEK = timedelta(days=7)
 # The subscription: one monthly price per renewed vehicle, whatever its ticket (resident, visitor, Handi) and type.
 # Per year: twelve months with 20 % off.
 YEARLY_DISCOUNT = 0.20
-MONTHLY_PRICE = 950
+MONTHLY_PRICE = 550
 # The Paris resident week when PayByPhone does not give it: car (any weight) 9 €, two-wheeler 4.50 €, electric free.
 RESIDENT_WEEK = {"car": 900, "two": 450, "electric": 0}
 ELECTRIC_TWO_WHEELS = re.compile(r"electric\s*motorcycle|deux[\s-]*roues\s*[ée]lectrique", re.I)
@@ -4337,7 +4337,7 @@ def notify_blocked(details, state):
                 "n'aura pas lieu." % car,
                 "Débloquez votre compte : le renouvellement reprend tout seul dès que le paiement est fait."
                 if state == "unpaid" else
-                "Continuez pour 9,50 € par mois, sans engagement : le renouvellement reprend tout seul aussitôt."],
+                "Continuez pour 5,50 € par mois, sans engagement : le renouvellement reprend tout seul aussitôt."],
                ("Débloquer mon compte" if state == "unpaid" else "Continuer avec PayByBot", unlock_link(details["owner"])),
                footer="Vous recevez cet e-mail parce que vous avez un renouvellement automatique sur PayByBot.")
 
@@ -4446,7 +4446,7 @@ def notify_trial_ending(to, link, step, end):
     send_email(to, subject, title,
                [first,
                 "Pendant ce mois, PayByBot a renouvelé votre stationnement à votre place, sans rien à faire.",
-                "Pour continuer après le %s : 9,50 € par mois pour tous vos véhicules, sans engagement. Rien n'est "
+                "Pour continuer après le %s : 5,50 € par mois pour tous vos véhicules, sans engagement. Rien n'est "
                 "prélevé avant cette date." % day],
                ("Continuer avec PayByBot", link),
                footer="Vous recevez cet e-mail parce que vous profitez du mois offert de PayByBot.")

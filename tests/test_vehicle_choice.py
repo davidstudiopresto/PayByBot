@@ -1,4 +1,4 @@
-"""One price for every vehicle of the account: 9,50 € a month (91,20 € a year), whatever their number."""
+"""One price for every vehicle of the account: 5,50 € a month (52,80 € a year), whatever their number."""
 import os
 import unittest
 from unittest.mock import patch
@@ -27,20 +27,20 @@ class OnePrice(unittest.TestCase):
         return seen["amount"]
 
     def test_three_vehicles_cost_the_same_as_one(self):
-        self.assertEqual(self.checkout(account_with(["AB123CD"]), "monthly"), 950)
-        self.assertEqual(self.checkout(account_with(["AB123CD", "EF456GH", "IJ789KL"]), "monthly"), 950)
-        self.assertEqual(self.checkout(account_with(["AB123CD", "EF456GH", "IJ789KL"]), "yearly"), 950)  # yearly is gone: monthly
+        self.assertEqual(self.checkout(account_with(["AB123CD"]), "monthly"), 550)
+        self.assertEqual(self.checkout(account_with(["AB123CD", "EF456GH", "IJ789KL"]), "monthly"), 550)
+        self.assertEqual(self.checkout(account_with(["AB123CD", "EF456GH", "IJ789KL"]), "yearly"), 550)  # yearly is gone: monthly
 
     def test_every_vehicle_is_covered(self):
         s = account_with(["AB123CD", "EF456GH"])
         with patch.object(web, "vehicle_zones", return_value=[]), patch.object(web, "reprice", return_value=False):
             found = web.account_pricing(s)
         self.assertEqual(found["billed"], ["AB123CD", "EF456GH"])
-        self.assertEqual(found["monthly"], 950)
+        self.assertEqual(found["monthly"], 550)
 
     def test_a_subscription_billed_per_vehicle_comes_back_to_one_price(self):
-        account = {"stripe_subscription": "sub_1", "plan": "monthly", "monthlies": [950],
-                   "billed_monthlies": [950, 950, 950]}
+        account = {"stripe_subscription": "sub_1", "plan": "monthly", "monthlies": [550],
+                   "billed_monthlies": [550, 550, 550]}
         sub = {"status": "active", "items": {"data": [{"id": "si_1", "price": {
             "unit_amount": 2850, "recurring": {"interval": "month"}}}]}}
         sent = []
@@ -53,9 +53,9 @@ class OnePrice(unittest.TestCase):
                 patch.object(web, "save_account_by_owner") as saved:
             self.assertTrue(web.reprice(account, "owner"))
         post = [kw for m, _, kw in sent if m == "POST"][0]
-        self.assertEqual(post["items[0][price_data][unit_amount]"], 950)
+        self.assertEqual(post["items[0][price_data][unit_amount]"], 550)
         self.assertEqual(post["proration_behavior"], "none")
-        saved.assert_called_with("owner", {"billed_monthlies": [950]})
+        saved.assert_called_with("owner", {"billed_monthlies": [550]})
 
 
 if __name__ == "__main__":

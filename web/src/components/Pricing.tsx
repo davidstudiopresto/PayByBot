@@ -16,7 +16,7 @@ import { TRY_LABEL, ui } from '@/lib/styles'
 const euros = (cents: number) => (cents % 100 ? (cents / 100).toFixed(2).replace('.', ',') : String(cents / 100)) + ' €'
 
 /** One price for all the account's vehicles, whatever their number, tickets and types (the server's MONTHLY_PRICE). */
-const MONTHLY = 950
+const MONTHLY = 550
 
 const INCLUDED = [
   'Tickets renouvelés automatiquement',
@@ -166,9 +166,9 @@ export function FreeMonthCard({ trialEnd }: { trialEnd: string | null }) {
   return (
     <div className="rise mb-6 rounded-2xl border border-ink/10 bg-white p-5">
       <p className="text-[1.05rem] font-medium text-ink">{left > 1 ? `Plus que ${left} jours offerts` : 'Dernier jour offert'}</p>
-      <p className="mt-2 text-[0.95rem] leading-relaxed text-ink/60">Ensuite, votre renouvellement continue pour 9,50 € par mois, tous vos véhicules, sans engagement.</p>
+      <p className="mt-2 text-[0.95rem] leading-relaxed text-ink/60">Ensuite, votre renouvellement continue pour 5,50 € par mois, tous vos véhicules, sans engagement.</p>
       <button onClick={() => setOpen(true)} className={cn(ui.primary, 'mt-4')}>
-        Continuer pour 9,50 €/mois
+        Continuer pour 5,50 €/mois
       </button>
       {open && <PlansDialog onClose={() => setOpen(false)} text="Le renouvellement reprend dès que le paiement est fait." />}
     </div>

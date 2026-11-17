@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { ArrowRight, Loader2, Mail, Phone, type LucideIcon } from 'lucide-react'
+import { ArrowRight, Loader2 } from 'lucide-react'
 import { RemotePanel } from '@/components/RemoteScene'
 import { PayByPhone, Plate, withPayByPhone, Wordmark } from '@/components/signs'
 import { api, type Me, type Overview, type PricedVehicle } from '@/lib/api'
@@ -17,20 +17,10 @@ function phoneText(username: string) {
 }
 
 /** One line of the welcome page: the label on the left, the value on the right. */
-function Line({ label, icon: Icon, children }: { label: string; icon?: LucideIcon; children: ReactNode }) {
+function Line({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-6 py-3.5 text-[1.05rem]">
-      {/* An icon in place of the label (the label kept for screen readers), as in « Mon compte ». */}
-      <dt className="pt-0.5 text-ink/60">
-        {Icon ? (
-          <>
-            <Icon className="mt-0.5 size-[1.15rem] text-ink/45" aria-hidden />
-            <span className="sr-only">{label}</span>
-          </>
-        ) : (
-          label
-        )}
-      </dt>
+    <div className="flex min-h-14 items-center justify-between gap-6 py-3 text-[1.05rem]">
+      <dt className="shrink-0 text-ink/60">{label}</dt>
       <dd className="min-w-0 text-right text-ink">{children}</dd>
     </div>
   )
@@ -157,7 +147,7 @@ export function Welcome({
         <div className="rise mx-auto w-full max-w-lg lg:my-auto lg:pt-2">
           {/* No big title: the page opens straight on what PayByPhone gave (this line is its heading). */}
           <h1 className={cn(ui.subtitle, 'mt-10 lg:mt-0')}>
-            Vos informations <PayByPhone />.
+            Vos informations <PayByPhone />
           </h1>
           {/* What PayByBot keeps, said where the account's details show (same line as « Comment ça marche »). */}
           <p className="mt-2 text-sm text-ink/60">Ni carte bancaire, ni mot de passe enregistrés.</p>
@@ -166,11 +156,11 @@ export function Welcome({
           {/* Lines arriving with PayByPhone's answer: the block grows smoothly, never in one jump. */}
           <SmoothHeight className="mt-8">
             <dl className="divide-y divide-ink/10 border-y border-ink/10">
-              <Line label="Compte" icon={Phone}>
+              <Line label="Téléphone">
                 <span className="font-heading font-medium tabular-nums">{phoneText(me.username)}</span>
               </Line>
               {email !== '' && (
-                <Line label="E-mail" icon={Mail}>
+                <Line label="E-mail">
                   {email === undefined ? (
                     <LineBone className="ml-auto w-36" />
                   ) : (
@@ -178,7 +168,7 @@ export function Welcome({
                   )}
                 </Line>
               )}
-              {(vehicles === undefined || !vehicles.length) && (
+              {/* Every vehicle of the account, above its residence (the choice below says which one to automate). */}
               <Line label={n > 1 ? 'Véhicules' : 'Véhicule'}>
                 {vehicles === undefined ? (
                   <PlateBone className="ml-auto" />
@@ -192,7 +182,6 @@ export function Welcome({
                   <span className="text-ink/60">Aucun</span>
                 )}
               </Line>
-              )}
               {/* Its own line: the zone(s) where PayByPhone gives the resident rate (« 75001 »). */}
               {(vehicles === undefined || zones.length > 0) && (
                 <Line label="Résidence">
