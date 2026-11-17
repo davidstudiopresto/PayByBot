@@ -218,9 +218,13 @@ function AccountDialog({
                 </Row>
                 {/* PayByPhone's paid SMS, only when their state is known: the user turns them off himself. */}
                 {sms.enabled != null && (
-                  <Row label={<SmsLabel on={!!sms.enabled} />}>
+                  // Its own line: the label on two or three lines may shrink, the switch never does.
+                  <li className={rowClass}>
+                    <span className="min-w-0 text-ink/60">
+                      <SmsLabel on={!!sms.enabled} />
+                    </span>
                     <SmsSwitch checked={!!sms.enabled} onPress={sms.toggle} busy={sms.busy} />
-                  </Row>
+                  </li>
                 )}
                 {login && <Row label={login.includes('@') ? 'Identifiant' : 'Téléphone'}>{phoneText(login)}</Row>}
                 <Row label="E-mail">{email === undefined ? <LineBone className="ml-auto w-44" /> : email || '—'}</Row>
@@ -274,7 +278,7 @@ function phoneText(login: string) {
 }
 
 /** One row: its label on the left, its value on the right (the same two columns as the plates' rows). */
-function Row({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <li className={rowClass}>
       <span className="shrink-0 text-ink/60">{label}</span>

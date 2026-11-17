@@ -17,7 +17,7 @@ function phoneText(username: string) {
 }
 
 /** One line of the welcome page: the label on the left, the value on the right. */
-function Line({ label, children }: { label: ReactNode; children: ReactNode }) {
+function Line({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex min-h-14 items-center justify-between gap-6 py-3 text-[1.05rem]">
       <dt className="shrink-0 text-ink/60">{label}</dt>
@@ -144,7 +144,22 @@ export function Welcome({
   return (
     <div className="grid min-h-dvh bg-background lg:grid-cols-[1.05fr_1fr]">
       <div className="flex flex-col px-6 pt-5 pb-10 sm:px-10 lg:px-[clamp(2.5rem,7vw,7rem)] lg:pb-6">
-        <Wordmark />
+        {/* The top bar: the wordmark, and on the right reading PayByPhone again or signing out (kept out of the way). */}
+        <div className="flex items-center justify-between gap-4">
+          <Wordmark />
+          <p className="flex items-center gap-x-5 text-sm text-ink/60">
+            {!noCard && (
+              <button onClick={refresh} disabled={refreshing} className={cn('inline-flex items-center gap-1.5', ui.link)}>
+                {refreshing && <Loader2 className="size-3.5 animate-spin" />} Rafraîchir
+              </button>
+            )}
+            {onLogout && (
+              <button onClick={onLogout} className={ui.link}>
+                Se déconnecter
+              </button>
+            )}
+          </p>
+        </div>
         <div className="rise mx-auto w-full max-w-lg lg:my-auto lg:pt-2">
           {/* No big title: the page opens straight on what PayByPhone gave (this line is its heading). */}
           <h1 className={cn(ui.subtitle, 'mt-10 lg:mt-0')}>
@@ -219,9 +234,15 @@ export function Welcome({
               </Line>
               {/* PayByPhone's paid SMS, as they really are: their cost said, the user turns them off himself. */}
               {sms.enabled != null && (
-                <Line label={<SmsLabel on={!!sms.enabled} />}>
-                  <SmsSwitch checked={!!sms.enabled} onPress={sms.toggle} busy={sms.busy} />
-                </Line>
+                // As a line of its own: the label on two or three lines may shrink, the switch never does.
+                <div className="flex min-h-14 items-center justify-between gap-6 py-3 text-[1.05rem]">
+                  <dt className="min-w-0 text-ink/60">
+                    <SmsLabel on={!!sms.enabled} />
+                  </dt>
+                  <dd className="shrink-0">
+                    <SmsSwitch checked={!!sms.enabled} onPress={sms.toggle} busy={sms.busy} />
+                  </dd>
+                </div>
               )}
             </dl>
             <SmsHelp wanted={sms.help} onClose={sms.closeHelp} />
@@ -310,18 +331,6 @@ export function Welcome({
             )}
           </button>
           )}
-          <p className="mt-4 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-ink/60">
-            {!noCard && (
-              <button onClick={refresh} disabled={refreshing} className={cn('inline-flex items-center gap-1.5', ui.link)}>
-                {refreshing && <Loader2 className="size-3.5 animate-spin" />} Rafraîchir
-              </button>
-            )}
-            {onLogout && (
-              <button onClick={onLogout} className={ui.link}>
-                Se déconnecter
-              </button>
-            )}
-          </p>
         </div>
       </div>
 

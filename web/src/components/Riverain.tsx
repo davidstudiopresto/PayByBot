@@ -1556,19 +1556,20 @@ export function useSms() {
   return { enabled, busy, toggle, help, closeHelp: () => (setHelp(null), read()) }
 }
 
-/** The « SMS de PayByPhone » line's label: under it, what the switch's position costs. On, the cost in red and why
- *  they are of no use (an incentive to turn them off; the user does it himself). */
+/** The « Notifications SMS de PayByPhone » line's label: under it, what the switch's position costs (on, in red: an
+ *  incentive to turn them off; the user does it himself). */
 export function SmsLabel({ on }: { on: boolean }) {
   return (
     <span className="block text-left">
-      SMS de <PayByPhone />
+      Notifications SMS de <PayByPhone />
       {on ? (
-        <>
-          <span className="block text-sm text-destructive">Activés : 0,20 à 0,25 € par SMS</span>
-          <span className="block text-sm">Inutiles : <PayByBot /> renouvelle vos tickets</span>
-        </>
+        <span className="block text-sm text-destructive">
+          <b className="font-semibold">Activé</b> : 0,20 à 0,25 € par SMS
+        </span>
       ) : (
-        <span className="block text-sm">Désactivés : aucun frais</span>
+        <span className="block text-sm">
+          <b className="font-semibold">Désactivé</b> : aucun frais
+        </span>
       )}
     </span>
   )

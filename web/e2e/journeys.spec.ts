@@ -789,11 +789,11 @@ test('bienvenue : les SMS payants montrent leur coût et l’utilisateur les cou
   await page.goto(LINK + '#/bienvenue')
   const sms = page.getByRole('switch', { name: 'SMS PayByPhone payants' })
   await expect(sms).toBeChecked() // as the account really is (the demo has them on): never changed without a tap
-  await expect(page.getByText('Activés : 0,20 à 0,25 € par SMS')).toBeVisible()
+  await expect(page.getByText('0,20 à 0,25 € par SMS')).toBeVisible()
   const saved = page.waitForRequest((r) => r.url().endsWith('/api/sms') && r.method() === 'POST')
   await sms.click({ force: true })
   expect((await saved).postDataJSON()).toEqual({ enabled: false })
-  await expect(page.getByText('Désactivés : aucun frais')).toBeVisible()
+  await expect(page.getByText(': aucun frais')).toBeVisible()
 })
 
 test('bienvenue : recharger la page garde la page de bienvenue (pas le tableau de bord)', async ({ page }) => {
