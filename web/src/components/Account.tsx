@@ -128,7 +128,7 @@ function AccountDialog({
                 rate under it. */}
             <Section title="Véhicules">
               {(() => {
-                const cell = 'flex min-w-0 flex-col items-start gap-1.5 bg-white px-3 py-3 sm:px-4'
+                const cell = 'flex min-w-0 flex-col items-start gap-1 bg-white px-3 py-2 sm:px-4'
                 const cells =
                   vehicles === undefined
                     ? // The cells' own shapes while PayByPhone answers (as many as the account's cars).
