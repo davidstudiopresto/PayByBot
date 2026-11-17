@@ -8,7 +8,6 @@ import { InviteButton } from '@/components/Invite'
 import { DailyTickets, DailyWizard, isDaily, ruleState, when as whenAt } from '@/components/DailyTickets'
 import { AccountButton } from '@/components/Account'
 import { RippleButton } from '@/components/ui/ripple-button'
-import { HistoryButton } from '@/components/History'
 import { FreeMonthCard, PlansDialog, ReactivateCard, TrialBanner } from '@/components/Pricing'
 import { ui } from '@/lib/styles'
 import { cn } from '@/lib/utils'
@@ -588,7 +587,6 @@ export function Dashboard({
         </button>
         )}
         {!me.demo && <InviteButton disabled={!data} />}
-        <HistoryButton disabled={!data} />
         <AccountButton data={data} onDeleted={onDeleted ?? onLogout} demo={me.demo} />
         <button onClick={onLogout} className={ui.navText} aria-label="Déconnexion">
           <LogOut className="size-5 lg:hidden" />

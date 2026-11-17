@@ -175,14 +175,6 @@ function AccountDialog({
                     <LineBone className="w-44" />
                   </li>
                 )}
-                {/* No subscription yet (free month or over): the way to activate it, here too. */}
-                {!demo && account && !account.plan && (
-                  <Row icon={Receipt} label="Abonnement">
-                    <button onClick={() => setPlans(true)} className={ui.link}>
-                      Activer mon compte
-                    </button>
-                  </Row>
-                )}
                 {/* Not read (no answer): said, with « Réessayer », instead of rows that silently go missing. */}
                 {!demo && account === null && (
                   <Row icon={Receipt} label="Abonnement">
@@ -205,6 +197,13 @@ function AccountDialog({
                 </Row>
               </Rows>
             </Section>
+
+            {/* No subscription yet (free month or over): the way to activate it, a real button. */}
+            {!demo && account && !account.plan && (
+              <button onClick={() => setPlans(true)} className={ui.primary}>
+                Activer mon compte
+              </button>
+            )}
 
             {!demo && (
               <button onClick={() => setDeleting(true)} className="text-sm font-medium text-destructive/80 underline-offset-[3px] transition hover:text-destructive hover:underline">
