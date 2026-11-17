@@ -198,11 +198,24 @@ function AccountDialog({
               </Rows>
             </Section>
 
-            {/* No subscription yet (free month or over): the way to activate it, a real button. */}
+            {/* No subscription yet (free month or over): the days left (the dashboard's bar), then the way to activate it. */}
             {!demo && account && !account.plan && (
-              <button onClick={() => setPlans(true)} className={ui.primary}>
-                Activer mon compte
-              </button>
+              <div>
+                {account.trialEnd && new Date(account.trialEnd).getTime() > Date.now() && (() => {
+                  const days = Math.ceil((new Date(account.trialEnd).getTime() - Date.now()) / 86_400_000)
+                  return (
+                    <p className="mb-3 flex items-center justify-center gap-1.5 rounded-[10px] bg-[#e3efff] px-4 py-2.5 text-sm font-semibold text-[#1f55e6]">
+                      Mois offert
+                      <span className="font-normal text-[#1f55e6]/70">
+                        · {days} jour{days > 1 ? 's' : ''} restant{days > 1 ? 's' : ''}
+                      </span>
+                    </p>
+                  )
+                })()}
+                <button onClick={() => setPlans(true)} className={ui.primary}>
+                  Activer mon compte
+                </button>
+              </div>
             )}
 
             {!demo && (
