@@ -275,12 +275,12 @@ export function Welcome({
                         </span>
                       )}
                       <Plate plate={v.plate} size="sm" className="shrink-0 whitespace-nowrap" />
-                      {/* On the right: its ticket now (from PayByPhone). */}
+                      {/* On the right: its ticket now (from PayByPhone), only when one runs. */}
                       <span className="ml-auto flex flex-col items-end gap-1 text-right">
                         <span className="text-sm text-ink/60">
                           {(() => {
                             const end = ticketEnd(v.plate)
-                            return end ? `Ticket jusqu’au ${when(end)}` : 'Aucun ticket en cours'
+                            return end ? `Ticket jusqu’au ${when(end)}` : null // nothing said when no ticket runs
                           })()}
                         </span>
                       </span>
