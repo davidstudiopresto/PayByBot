@@ -526,8 +526,8 @@ test('renouvellement résident : s’active depuis la carte du véhicule', async
 test('mon compte : la carte bancaire et sa date de fin', async ({ page }) => {
   await demo(page)
   await page.getByRole('button', { name: 'Mon compte' }).first().click()
-  await expect(page.getByRole('dialog').getByText('Carte bancaire')).toBeVisible()
-  await expect(page.getByRole('dialog').getByText(/Visa •••• 4242 — exp\. \d\d\/\d\d/)).toBeVisible()
+  await expect(page.getByRole('dialog').getByText('Carte', { exact: true })).toBeVisible()
+  await expect(page.getByRole('dialog').getByText(/^Visa · exp\. \d\d\/\d\d/)).toBeVisible()
   const app = page.getByRole('dialog').getByRole('link', { name: 'PayByPhone', exact: true })
   await expect(app).toHaveAttribute('href', 'https://paybyphone.onelink.me/ZQkh/')
 })

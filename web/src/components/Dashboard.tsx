@@ -529,7 +529,7 @@ export function Dashboard({
       {/* No card saved on PayByPhone (removed since, Apple Pay only): PayByBot cannot pay, so it is not usable. The
           only requirement: no resident rate is needed (non-residents take tickets on chosen days). */}
       {data && !me.demo && !data.payments.some((p) => p.kind === 'card') && (
-        <CardGate account={<AccountButton data={data} onDeleted={onDeleted ?? onLogout} demo={me.demo} label />} />
+        <CardGate account={<AccountButton data={data} onDeleted={onDeleted ?? onLogout} demo={me.demo} label login={me.demo ? undefined : me.username} />} />
       )}
       <TrialBanner
         blocked={paused ?? account?.blocked ?? null}
@@ -571,7 +571,7 @@ export function Dashboard({
         {/* Inviting a friend: always offered to a signed-in account (word of mouth is the only way in). */}
         {/* Programming a non-resident ticket: a sober button beside the invitation, no card in the page. */}
         {!me.demo && <InviteButton disabled={!data} />}
-        <AccountButton data={data} onDeleted={onDeleted ?? onLogout} demo={me.demo} />
+        <AccountButton data={data} onDeleted={onDeleted ?? onLogout} demo={me.demo} login={me.demo ? undefined : me.username} />
         <button onClick={onLogout} className={ui.navText} aria-label="Déconnexion">
           <LogOut className="size-5 lg:hidden" />
           <span className="hidden lg:inline">Déconnexion</span>
