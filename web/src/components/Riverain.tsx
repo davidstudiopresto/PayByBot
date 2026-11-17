@@ -1618,7 +1618,7 @@ export function CardGate({ account }: { account?: ReactNode }) {
   return (
     <CardRequired>
       <button onClick={() => window.location.reload()} className={cn('mt-7', ui.primary)}>
-        J’ai ajouté ma carte
+        J’ai ajouté une carte
       </button>
       <p className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm [&>*]:whitespace-nowrap">
         <a href={PAYBYPHONE_APP} target="_blank" rel="noreferrer" className={ui.link}>

@@ -362,7 +362,7 @@ test('bienvenue sans carte bancaire valide : croix rouge, on ne passe pas', asyn
   await expect(next).toHaveCount(0)
   await expect(page.getByRole('radio')).toHaveCount(0)
   payments = [{ id: 'c2', label: 'Visa •••• 1111 — exp. 04/29', kind: 'card' }]
-  await page.getByRole('button', { name: 'J’ai ajouté ma carte' }).click()
+  await page.getByRole('button', { name: 'J’ai ajouté une carte' }).click()
   await expect(next).toBeEnabled()
   // The card just added is shown.
   await expect(page.getByText('Visa •••• 1111')).toBeVisible()

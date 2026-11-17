@@ -294,7 +294,7 @@ export function Welcome({
           )}
           {noCard ? (
             <button onClick={refresh} disabled={refreshing} className={cn('mt-6', ui.primary)}>
-              {refreshing ? <Loader2 className="size-5 animate-spin" /> : 'J’ai ajouté ma carte'}
+              {refreshing ? <Loader2 className="size-5 animate-spin" /> : 'J’ai ajouté une carte'}
             </button>
           ) : (
           <button
