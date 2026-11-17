@@ -101,7 +101,7 @@ test('sans voiture résidente ni ticket : pas de carte « Non couvert », le bou
   await demo(page)
   await page.keyboard.press('Escape') // the wizard opens by itself on a first visit without a resident car
   await expect(page.getByText('Non couvert')).toHaveCount(0)
-  await expect(page.getByText('Votre stationnement n\'est pas encore automatisé.')).toBeVisible()
+  await expect(page.getByText('Votre stationnement n\'est pas encore automatisé.')).toHaveCount(0)
   await wizardButton(page).click()
   await expect(page.getByText(/Étape 1 sur/)).toBeVisible()
 })

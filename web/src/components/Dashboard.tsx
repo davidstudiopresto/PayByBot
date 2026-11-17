@@ -590,13 +590,12 @@ export function Dashboard({
         {(freeMonthPreview === 'j25' || (!me.demo && !!me.hosted && account && !account.subscribed && !account.blocked)) && (
           <FreeMonthCard trialEnd={freeMonthPreview === 'j25' ? new Date(Date.now() + 5 * 86_400_000).toISOString() : (account?.trialEnd ?? null)} />
         )}
-        {/* No greeting: the page opens on what matters, whether a ticket is running. */}
+        {/* No greeting: the page opens on what matters, whether a ticket is running. Nothing automated and nothing
+            running: no sentence at all, the cars and their « Automatiser » say it. */}
+        {(!data || running.length > 0 || data.autopilots.some((ap) => ap.enabled && !ruleState(ap).finished)) && (
         <h1 className="mt-2 text-[1.05rem] text-ink/60">
           {!data
             ? withPayByPhone('Chargement de votre compte PayByPhone.')
-            : !data.autopilots.some((ap) => ap.enabled && !ruleState(ap).finished)
-              ? // Nothing automated (a finished one-off ticket does not count): say it plainly.
-                "Votre stationnement n'est pas encore automatisé."
             : running.length
               ? // One card: « Votre ticket en cours », several (running or programmed): « Vos tickets ».
                 sessions.length + shownDaily > 1
@@ -606,6 +605,7 @@ export function Dashboard({
                 ? `Aucun ticket en cours : le prochain est prévu ${whenAt(nextPlanned)}.`
                 : "Aucun véhicule n'est couvert en ce moment."}
         </h1>
+        )}
 
         {data && sessions.length > 0 && (
           <div className="mt-5 space-y-3">
