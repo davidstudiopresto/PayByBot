@@ -124,33 +124,45 @@ function AccountDialog({
         <SmoothHeight>
           {/* One left edge for everything (titles, notes, boxes, the delete link), three titled sections, one rhythm. */}
           <div className="space-y-6 px-6 pt-5 pb-5">
-            {/* The vehicles, one row each: the plate on the left, the resident rate on the right. */}
+            {/* The vehicles, two to a line (one line for two plates; one on the smallest phones): each plate with its resident
+                rate under it. */}
             <Section title="Véhicules">
-              <Rows>
-                {vehicles === undefined ? (
-                  // The rows' own shapes while PayByPhone answers (as many as the account's cars).
-                  (data.vehicles.length ? data.vehicles : [null]).map((_, i) => (
-                    <li key={i} className={rowClass}>
-                      <PlateBone />
-                      <LineBone className="w-28" />
-                    </li>
-                  ))
-                ) : vehicles.length ? (
-                  vehicles.map((v) => {
-                    const zone = arrondissement(v.zone)
-                    return (
-                      <li key={v.plate} className={rowClass}>
-                        <Plate plate={v.plate} size="sm" />
-                        <span className={cn('text-right', v.zone ? 'text-ink' : 'text-ink/60')}>
-                          {zone ? `Résident · ${zone}` : v.zone ? <ZonePlate zone={v.zone} /> : pricingFailed ? '' : 'Non résident'}
-                        </span>
-                      </li>
-                    )
-                  })
-                ) : (
-                  <li className={cn(rowClass, 'text-ink/60')}>{data.vehicles.length ? 'Aucun véhicule au tarif résident' : 'Aucun véhicule'}</li>
-                )}
-              </Rows>
+              {(() => {
+                const cell = 'flex min-w-0 flex-col items-start gap-1.5 bg-white px-3 py-3 sm:px-4'
+                const cells =
+                  vehicles === undefined
+                    ? // The cells' own shapes while PayByPhone answers (as many as the account's cars).
+                      (data.vehicles.length ? data.vehicles : [null]).map((_, i) => (
+                        <li key={i} className={cell}>
+                          <PlateBone />
+                          <LineBone className="w-24" />
+                        </li>
+                      ))
+                    : vehicles.map((v) => {
+                        const zone = arrondissement(v.zone)
+                        return (
+                          <li key={v.plate} className={cell}>
+                            <Plate plate={v.plate} size="sm" className="shrink-0 whitespace-nowrap" />
+                            <span className={cn('text-sm', v.zone ? 'text-ink' : 'text-ink/60')}>
+                              {zone ? `Résident · ${zone}` : v.zone ? <ZonePlate zone={v.zone} /> : pricingFailed ? '' : 'Non résident'}
+                            </span>
+                          </li>
+                        )
+                      })
+                if (!cells.length)
+                  return (
+                    <Rows>
+                      <li className={cn(rowClass, 'text-ink/60')}>{data.vehicles.length ? 'Aucun véhicule au tarif résident' : 'Aucun véhicule'}</li>
+                    </Rows>
+                  )
+                // Hairlines between the cells (the box's grey showing through a 1px gap); an odd last line filled white.
+                return (
+                  <ul className={cn('grid gap-px overflow-hidden rounded-xl border border-ink/10 bg-ink/[0.08]', cells.length > 1 && 'min-[360px]:grid-cols-2')}>
+                    {cells}
+                    {cells.length > 1 && cells.length % 2 === 1 && <li aria-hidden className="hidden bg-white min-[360px]:block" />}
+                  </ul>
+                )
+              })()}
             </Section>
 
             {/* The subscription: where it stands, and its one action. */}
