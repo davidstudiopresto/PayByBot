@@ -1574,7 +1574,7 @@ export function useSms() {
 
 /** The « Notifications SMS de PayByPhone » line's label: under it, what the switch's position costs (on, in red: an
  *  incentive to turn them off; the user does it himself). */
-export function SmsLabel({ on }: { on: boolean }) {
+export function SmsLabel({ on, title = true }: { on: boolean; /** Its own « Notifications SMS de PayByPhone » line (off under a section title saying it). */ title?: boolean }) {
   const [more, setMore] = useState(false)
   // Just turned off by the user (not on the page's load): the line confirms it, a green tick drawn as it fades in.
   const was = useRef(on)
@@ -1588,7 +1588,11 @@ export function SmsLabel({ on }: { on: boolean }) {
   }, [on])
   return (
     <span className="block text-left">
-      Notifications SMS de <PayByPhone />
+      {title && (
+        <>
+          Notifications SMS de <PayByPhone />
+        </>
+      )}
       <span key={on ? 'on' : 'off'} className={cn('block text-sm', on && 'text-destructive', justOff && !on && 'rise')}>
         {!on && (
           <Check

@@ -217,20 +217,25 @@ function AccountDialog({
                     <span className="text-ink/60">Aucune</span>
                   )}
                 </Row>
-                {/* PayByPhone's paid SMS, only when their state is known: the user turns them off himself. */}
-                {sms.enabled != null && (
-                  // Its own line: the label on two or three lines may shrink, the switch never does.
-                  <li className={rowClass}>
-                    <span className="min-w-0 text-ink/60">
-                      <SmsLabel on={!!sms.enabled} />
-                    </span>
-                    <SmsSwitch checked={!!sms.enabled} onPress={sms.toggle} busy={sms.busy} />
-                  </li>
-                )}
                 {login && <Row label={login.includes('@') ? 'Identifiant' : 'Téléphone'} icon={login.includes('@') ? UserRound : Phone}>{phoneText(login)}</Row>}
                 <Row label="E-mail" icon={Mail}>{email === undefined ? <LineBone className="ml-auto w-44" /> : email || '—'}</Row>
               </Rows>
             </Section>
+
+            {/* PayByPhone's paid SMS, a section of their own (only when their state is known): the box above keeps its
+                three icon rows; here the state, its cost and the switch, which the user turns off himself. */}
+            {sms.enabled != null && (
+              <Section title="Notifications SMS de PayByPhone">
+                <Rows>
+                  <li className={rowClass}>
+                    <span className="min-w-0 text-ink/60">
+                      <SmsLabel on={!!sms.enabled} title={false} />
+                    </span>
+                    <SmsSwitch checked={!!sms.enabled} onPress={sms.toggle} busy={sms.busy} />
+                  </li>
+                </Rows>
+              </Section>
+            )}
             <SmsHelp wanted={sms.help} onClose={sms.closeHelp} />
           </div>
         </SmoothHeight>
