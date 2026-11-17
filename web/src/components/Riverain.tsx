@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react'
-import { Check, Loader2, Mail, Pause, Play, Repeat, RotateCw, X } from 'lucide-react'
+import { ArrowRight, Check, Loader2, Mail, Pause, Play, Repeat, RotateCw, X } from 'lucide-react'
 import { toast } from 'sonner'
+import NumberFlow from '@number-flow/react'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { NoPayment } from '@/components/NoPayment'
 import { arrondissement, LogoMark, PayByBot, PayByPhone, Plate, withPayByPhone, ZonePlate } from '@/components/signs'
@@ -589,34 +590,66 @@ export const PAYBYPHONE_APP = 'https://paybyphone.onelink.me/ZQkh/'
 
 /** A ticket card's status, said plainly: « Véhicule couvert » with a green tick, the time left on the right.
  *  In its last 15 minutes: in red, « Bientôt terminé ». */
-/** « 6 j 23 h » (minutes only under a day), « 2 h 05 min », « 12 min »: what is left of a ticket. */
-function timeLeft(ms: number) {
+/** The time left, its digits rolling as they change (NumberFlow), as « 6 j 23 h », « 2 h 05 min », « 12 min ». NumberFlow
+ *  draws its digits apart from the page's text: the same words are given to screen readers as plain text. */
+function TimeLeft({ ms }: { ms: number }) {
   const min = Math.max(1, Math.floor(ms / 60_000))
   const d = Math.floor(min / 1440)
   const h = Math.floor((min % 1440) / 60)
   const m = min % 60
-  if (d) return `${d} j ${h} h`
-  return h ? `${h} h ${String(m).padStart(2, '0')} min` : `${m} min`
+  const said = d ? `${d} j ${h} h` : h ? `${h} h ${String(m).padStart(2, '0')} min` : `${m} min`
+  return (
+    <>
+      <span className="sr-only">{said}</span>
+      <span aria-hidden>
+        {d ? (
+          <>
+            <NumberFlow value={d} /> j <NumberFlow value={h} /> h
+          </>
+        ) : h ? (
+          <>
+            <NumberFlow value={h} /> h <NumberFlow value={m} format={{ minimumIntegerDigits: 2 }} /> min
+          </>
+        ) : (
+          <>
+            <NumberFlow value={m} /> min
+          </>
+        )}
+      </span>
+    </>
+  )
 }
 
-export function CoveredLine({ end, soon = false }: { end: number; soon?: boolean }) {
+export function CoveredLine({ end, start, soon = false }: { end: number; /** The ticket's start: a bar shows how much is left. */ start?: number; soon?: boolean }) {
   // Counted down once a minute.
   const [now, setNow] = useState(Date.now)
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 30_000)
     return () => clearInterval(id)
   }, [])
+  // What is left of the ticket, for its bar (as a ride's progress): from full at its start to empty at its end.
+  const left = start !== undefined && end > start ? Math.min(1, Math.max(0, (end - now) / (end - start))) : null
   // Like the card's other rows: the status left, the time left right under its label (the exact end on hover).
   return (
+    <div>
+    {/* As every row of the card: a title and a grey line under it on the left, one thing on the right. */}
     <div className="flex items-center justify-between gap-4">
-      <span className={cn('flex min-w-0 items-center gap-1.5 text-[1.05rem] font-medium', soon ? 'text-destructive' : 'text-ink')}>
-        <Check className={cn('check-draw size-4 shrink-0', soon ? 'text-destructive' : 'text-[#1a9a4a]')} strokeWidth={3} />
+      {/* A plain title, no icon: the green bar under it says it runs (red in the last 15 minutes). */}
+      <span className={cn('min-w-0 text-[1.05rem] font-medium', soon ? 'text-destructive' : 'text-ink')}>
         {soon ? 'Bientôt terminé' : 'Véhicule couvert'}
       </span>
-      <span className="shrink-0 text-right whitespace-nowrap" title={`Jusqu’au ${when(end)}`}>
-        <span className="block text-sm text-ink/60">Temps restant</span>
-        <span className="block text-[1.05rem] font-medium text-ink tabular-nums">{timeLeft(end - now)}</span>
+      <span className="shrink-0 text-[1.05rem] font-medium whitespace-nowrap text-ink tabular-nums" title={`Jusqu’au ${when(end)}`}>
+        <TimeLeft ms={end - now} />
       </span>
+    </div>
+    {left !== null && (
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-ink/[0.06]" aria-hidden>
+        <div
+          className={cn('ticket-bar h-full rounded-full transition-[width] duration-700', soon ? 'bg-destructive' : 'bg-[#1a9a4a]')}
+          style={{ width: `${Math.max(left * 100, 2)}%` }}
+        />
+      </div>
+    )}
     </div>
   )
 }
@@ -666,17 +699,12 @@ export function OpeningSwitch({ open, isOpen, on = false }: { open: () => void; 
 
 /** « Renouvellement auto », off: not a grey switch the eye skips but the one thing to do, said plainly (the car is not
  *  covered after this ticket) with a blue « Activer ». */
-export function RenewalOff({ onActivate, busy = false, note = true }: { onActivate: () => void; busy?: boolean; /** « Non activé… » (not where the card says it already, in red). */ note?: boolean }) {
+export function RenewalOff({ onActivate, busy = false }: { onActivate: () => void; busy?: boolean }) {
+  // One button across the card (as Uber's actions): it says what to do, no line of text around it.
   return (
-    <div className="flex items-center justify-between gap-4">
-      <span className="min-w-0">
-        <span className="block text-[1.05rem] font-medium text-ink">Renouvellement auto</span>
-        {note && <span className="block text-sm text-destructive/85">Non couvert après ce ticket</span>}
-      </span>
-      <button onClick={onActivate} disabled={busy} className={cn(ui.pillBlue, 'shrink-0')} aria-label="Activer le renouvellement auto">
-        {busy ? <Loader2 className="size-4 animate-spin" /> : 'Activer'}
-      </button>
-    </div>
+    <button onClick={onActivate} disabled={busy} className={cn(ui.primary, 'h-12 text-base')} aria-label="Activer le renouvellement auto">
+      {busy ? <Loader2 className="size-5 animate-spin" /> : <>Activer le renouvellement <ArrowRight className="size-5" /></>}
+    </button>
   )
 }
 

@@ -1,7 +1,7 @@
 import { Loading } from '@/components/Loading'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
-import { LogOut } from 'lucide-react'
+import { Car, LogOut, Plus } from 'lucide-react'
 import { PayByBot, PayByPhone, Plate, withPayByPhone } from '@/components/signs'
 import { TopBar } from '@/components/TopBar'
 import { InviteButton } from '@/components/Invite'
@@ -120,7 +120,7 @@ function Ticket({
       {/* The ticket: when it ends (renewal on) or the time left, large, with the end beside it. */}
       <div className="border-t border-ink/[0.06] px-5 py-4">
         {/* One line: until when (the time left would say it twice); in red in its last 15 minutes. */}
-        <CoveredLine key={celebrate} end={end} soon={soon} />
+        <CoveredLine key={celebrate} end={end} start={new Date(session.start).getTime()} soon={soon} />
         {renewing && (
           <DailyWizard
             data={data}
@@ -255,21 +255,17 @@ function IdleVehicles({ data, onChanged, hosted, demo, autoPlate, locked, onLogo
   const isResident = (v: { plate: string }) => residents.has(key(v.plate))
   const cars = data.vehicles.filter((v) => isResident(v) && !renewed.has(key(v.plate)) && !parked.has(key(v.plate)))
   if (!cars.length && !others.length) return null
-  // Résident or Non résident: plain grey text, no colour (as on the ticket cards).
-  // « Résident » said, nothing for the others (no « Non résident » repeated on every line).
-  const tag = (resident: boolean) => (resident ? <span className="text-sm text-ink/60">Résident</span> : null)
-  const automate = 'h-9 shrink-0 rounded-[10px] bg-ink/[0.06] px-4 text-sm font-semibold text-ink transition hover:bg-ink/[0.1]'
-  const row = (v: Overview['vehicles'][number], status: ReactNode, button: ReactNode) => (
-    <li key={v.plate} className="flex items-center gap-4 px-5 py-3 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-      {/* Plate, then Résident (or Non résident) in the middle, then the button: on a phone the tag goes under
-          the plate, the plate keeping its width. */}
-      <span className="flex min-w-0 flex-col items-start gap-1.5 sm:contents">
-        <span className="flex shrink-0">
-          <Plate plate={v.plate} size="sm" />
-        </span>
-        <span className="flex sm:justify-self-center">{status}</span>
+  // The action, a small grey icon button with a « + » (coss UI's « Small icon button », named « Automatiser » for
+  // screen readers): light, as Uber's « Go again » list.
+  const automate = 'grid size-8 shrink-0 place-items-center rounded-lg bg-ink/[0.06] text-ink transition hover:bg-ink/[0.1]'
+  const arrow = <Plus className="size-4" aria-hidden />
+  const row = (v: Overview['vehicles'][number], button: ReactNode) => (
+    <li key={v.plate} className="flex items-center gap-3 px-4 py-3">
+      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-ink/[0.06] text-ink/60" aria-hidden>
+        <Car className="size-5" strokeWidth={1.75} />
       </span>
-      <span className="ml-auto flex sm:ml-0 sm:justify-self-end">{button}</span>
+      <Plate plate={v.plate} size="sm" className="shrink-0 whitespace-nowrap" />
+      <span className="ml-auto flex">{button}</span>
     </li>
   )
   return (
@@ -279,7 +275,6 @@ function IdleVehicles({ data, onChanged, hosted, demo, autoPlate, locked, onLogo
         {cars.map((v) =>
           row(
             v,
-            tag(true),
             // Its weekly renewal (the switch's window, auto-opened after the welcome page as before).
             <ActivateRenewal
               key={v.plate}
@@ -292,8 +287,8 @@ function IdleVehicles({ data, onChanged, hosted, demo, autoPlate, locked, onLogo
               locked={!!locked && !!autoPlate && key(autoPlate) === key(v.plate)}
               onLogout={onLogout}
               trigger={(open) => (
-                <RippleButton onClick={open} rippleColor="#9ca3af" className={automate}>
-                  Automatiser
+                <RippleButton onClick={open} rippleColor="#9ca3af" className={automate} aria-label="Automatiser">
+                  {arrow}
                 </RippleButton>
               )}
             />,
@@ -302,9 +297,8 @@ function IdleVehicles({ data, onChanged, hosted, demo, autoPlate, locked, onLogo
         {others.map((v) =>
           row(
             v,
-            tag(false),
-            <RippleButton onClick={() => onProgram(v.plate)} rippleColor="#9ca3af" className={automate}>
-              Automatiser
+            <RippleButton onClick={() => onProgram(v.plate)} rippleColor="#9ca3af" className={automate} aria-label="Automatiser">
+              {arrow}
             </RippleButton>,
           ),
         )}
