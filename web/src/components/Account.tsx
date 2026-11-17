@@ -122,7 +122,7 @@ function AccountDialog({
         {/* What arrives a moment later (PayByPhone, the account) makes the window grow smoothly, never in one jump. */}
         <SmoothHeight>
           {/* One left edge for everything (titles, notes, boxes, the delete link), three titled sections, one rhythm. */}
-          <div className="space-y-6 px-6 pt-5 pb-6">
+          <div className="space-y-6 px-6 pt-5 pb-5">
             {/* The vehicles, one row each: the plate on the left, the resident rate on the right. */}
             <Section title="Véhicules">
               <Rows>
@@ -231,22 +231,24 @@ function AccountDialog({
               </Rows>
             </Section>
             <SmsHelp wanted={sms.help} onClose={sms.closeHelp} />
-            {/* All of it comes from PayByPhone: what is missing or wrong is changed there, in its app (its own link, as in
-                the e-mails: on an iPhone it opens the app when installed, else its App Store page). One line. */}
-            <p className="text-sm text-ink/60">
-              Une info à corriger ? Faites-le sur{' '}
-              <a href="https://paybyphone.onelink.me/ZQkh/" target="_blank" rel="noreferrer" className={ui.link}>
-                <PayByPhone />
-              </a>
-            </p>
-
-            {!demo && (
-              <button onClick={() => setDeleting(true)} className="text-sm font-medium text-destructive/80 underline-offset-[3px] transition hover:text-destructive hover:underline">
-                Supprimer mon compte
-              </button>
-            )}
           </div>
         </SmoothHeight>
+        {/* Kept in sight at the bottom of the window, however many vehicles above (the window scrolls under it). */}
+        <div className="sticky bottom-0 space-y-3 border-t border-ink/[0.06] bg-white px-6 py-4">
+          {/* All of it comes from PayByPhone: what is missing or wrong is changed there, in its app (its own link, as in
+              the e-mails: on an iPhone it opens the app when installed, else its App Store page). One line. */}
+          <p className="text-sm text-ink/60">
+            Une info à corriger ? Faites-le sur{' '}
+            <a href="https://paybyphone.onelink.me/ZQkh/" target="_blank" rel="noreferrer" className={ui.link}>
+              <PayByPhone />
+            </a>
+          </p>
+          {!demo && (
+            <button onClick={() => setDeleting(true)} className="text-sm font-medium text-destructive/80 underline-offset-[3px] transition hover:text-destructive hover:underline">
+              Supprimer mon compte
+            </button>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   )
