@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Loader2, UserRound } from 'lucide-react'
+import { CreditCard, Loader2, Mail, Phone, UserRound, type LucideIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { arrondissement, PayByBot, PayByPhone, Plate, ZonePlate } from '@/components/signs'
@@ -111,7 +111,8 @@ function AccountDialog({
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className={ui.dialog}>
+      {/* A little wider than the other windows: the SMS line (state, cost, « En savoir plus ») fits on one line. */}
+      <DialogContent className={cn(ui.dialog, 'sm:max-w-[34rem]')}>
         <div className="px-6 pt-7">
           <DialogTitle className={ui.dialogTitle}>Mon compte</DialogTitle>
           <DialogDescription className="mt-1 text-ink/60">
@@ -203,7 +204,7 @@ function AccountDialog({
 
             <Section title="Paiement et contact">
               <Rows>
-                <Row label={cards.length > 1 ? 'Cartes' : 'Carte'}>
+                <Row label={cards.length > 1 ? 'Cartes' : 'Carte'} icon={CreditCard}>
                   {cards.length ? (
                     cards.map((c) => (
                       <span key={c.id} className="block truncate">
@@ -226,8 +227,8 @@ function AccountDialog({
                     <SmsSwitch checked={!!sms.enabled} onPress={sms.toggle} busy={sms.busy} />
                   </li>
                 )}
-                {login && <Row label={login.includes('@') ? 'Identifiant' : 'Téléphone'}>{phoneText(login)}</Row>}
-                <Row label="E-mail">{email === undefined ? <LineBone className="ml-auto w-44" /> : email || '—'}</Row>
+                {login && <Row label={login.includes('@') ? 'Identifiant' : 'Téléphone'} icon={login.includes('@') ? UserRound : Phone}>{phoneText(login)}</Row>}
+                <Row label="E-mail" icon={Mail}>{email === undefined ? <LineBone className="ml-auto w-44" /> : email || '—'}</Row>
               </Rows>
             </Section>
             <SmsHelp wanted={sms.help} onClose={sms.closeHelp} />
@@ -280,10 +281,19 @@ function phoneText(login: string) {
 }
 
 /** One row: its label on the left, its value on the right (the same two columns as the plates' rows). */
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Row({ label, icon: Icon, children }: { label: string; /** A sober icon in place of the label (kept for screen readers). */ icon?: LucideIcon; children: React.ReactNode }) {
   return (
     <li className={rowClass}>
-      <span className="shrink-0 text-ink/60">{label}</span>
+      <span className="shrink-0 text-ink/60">
+        {Icon ? (
+          <>
+            <Icon className="size-[1.15rem] text-ink/45" strokeWidth={1.75} aria-hidden />
+            <span className="sr-only">{label}</span>
+          </>
+        ) : (
+          label
+        )}
+      </span>
       <span className="min-w-0 truncate text-right text-ink">{children}</span>
     </li>
   )
