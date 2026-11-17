@@ -9,7 +9,7 @@ import { LineBone, PlateBone } from '@/components/Skeletons'
 import { ui } from '@/lib/styles'
 import { SmoothHeight } from '@/components/ui/smooth-height'
 import { PlansDialog } from '@/components/Pricing'
-import { SmsHelp, SmsSwitch, useSms } from '@/components/Riverain'
+import { SmsHelp, SmsLabel, SmsSwitch, useSms } from '@/components/Riverain'
 
 /** "Mon compte" in the top bar: what PayByBot reads from the PayByPhone account, the home zone and e-mail. */
 export function AccountButton({
@@ -218,8 +218,8 @@ function AccountDialog({
                 </Row>
                 {/* PayByPhone's paid SMS, only when their state is known: the user turns them off himself. */}
                 {sms.enabled != null && (
-                  <Row label="SMS PayByPhone">
-                    <SmsSwitch sms={sms} />
+                  <Row label={<SmsLabel on={!!sms.enabled} />}>
+                    <SmsSwitch checked={!!sms.enabled} onPress={sms.toggle} busy={sms.busy} />
                   </Row>
                 )}
                 {login && <Row label={login.includes('@') ? 'Identifiant' : 'Téléphone'}>{phoneText(login)}</Row>}
@@ -274,7 +274,7 @@ function phoneText(login: string) {
 }
 
 /** One row: its label on the left, its value on the right (the same two columns as the plates' rows). */
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Row({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
     <li className={rowClass}>
       <span className="shrink-0 text-ink/60">{label}</span>

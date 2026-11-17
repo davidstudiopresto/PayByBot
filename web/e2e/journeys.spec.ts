@@ -555,7 +555,8 @@ test('mon compte : les véhicules sans prix ni choix à faire', async ({ page })
   await page.getByRole('button', { name: 'Mon compte' }).first().click()
   const dialog = page.getByRole('dialog')
   await expect(dialog.getByText('Paiement et contact')).toBeVisible()
-  await expect(dialog.getByText(/€/)).toHaveCount(0) // no price here, per vehicle or otherwise
+  await expect(dialog.getByText(/€/)).toHaveCount(1) // no price per vehicle: the one price is PayByPhone's SMS
+  await expect(dialog.getByText(/€/)).toHaveText(/par SMS/)
   // No choice per vehicle: the one switch is PayByPhone's paid SMS.
   await expect(dialog.getByRole('switch')).toHaveCount(1)
   await expect(dialog.getByRole('switch', { name: 'SMS PayByPhone payants' })).toBeVisible()
@@ -782,6 +783,18 @@ async function residentCars(page: import('@playwright/test').Page, change: (v: {
     await route.fulfill({ json })
   })
 }
+
+test('bienvenue : les SMS payants montrent leur coût et l’utilisateur les coupe lui-même', async ({ page }) => {
+  await demo(page)
+  await page.goto(LINK + '#/bienvenue')
+  const sms = page.getByRole('switch', { name: 'SMS PayByPhone payants' })
+  await expect(sms).toBeChecked() // as the account really is (the demo has them on): never changed without a tap
+  await expect(page.getByText('Activés : 0,20 à 0,25 € par SMS')).toBeVisible()
+  const saved = page.waitForRequest((r) => r.url().endsWith('/api/sms') && r.method() === 'POST')
+  await sms.click({ force: true })
+  expect((await saved).postDataJSON()).toEqual({ enabled: false })
+  await expect(page.getByText('Désactivés : aucun frais')).toBeVisible()
+})
 
 test('bienvenue : recharger la page garde la page de bienvenue (pas le tableau de bord)', async ({ page }) => {
   await demo(page)

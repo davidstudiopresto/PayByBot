@@ -1556,14 +1556,27 @@ export function useSms() {
   return { enabled, busy, toggle, help, closeHelp: () => (setHelp(null), read()) }
 }
 
-/** The right side of the « SMS PayByPhone » line: they are paid, and the switch (the user's tap is his consent). */
-export function SmsSwitch({ sms }: { sms: ReturnType<typeof useSms> }) {
+/** The « SMS de PayByPhone » line's label: under it, what the switch's position costs. On, the cost in red and why
+ *  they are of no use (an incentive to turn them off; the user does it himself). */
+export function SmsLabel({ on }: { on: boolean }) {
   return (
-    <span className="inline-flex items-center gap-3">
-      <span className="text-sm text-ink/60">Payants</span>
-      <ToggleSwitch checked={!!sms.enabled} label="SMS PayByPhone payants" busy={sms.busy} disabled={sms.busy} onPress={sms.toggle} />
+    <span className="block text-left">
+      SMS de <PayByPhone />
+      {on ? (
+        <>
+          <span className="block text-sm text-destructive">Activés : 0,20 à 0,25 € par SMS</span>
+          <span className="block text-sm">Inutiles : <PayByBot /> renouvelle vos tickets</span>
+        </>
+      ) : (
+        <span className="block text-sm">Désactivés : aucun frais</span>
+      )}
     </span>
   )
+}
+
+/** The switch of the « SMS de PayByPhone » line (the user's tap is his consent). */
+export function SmsSwitch({ checked, onPress, busy = false }: { checked: boolean; onPress: () => void; busy?: boolean }) {
+  return <ToggleSwitch checked={checked} label="SMS PayByPhone payants" busy={busy} disabled={busy} onPress={onPress} />
 }
 
 /** When PayByPhone refuses the change: where to do it in its app (Compte › Paramètres › Notifications). */

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { ui } from '@/lib/styles'
 import { LineBone, PlateBone } from '@/components/Skeletons'
 import { SmoothHeight } from '@/components/ui/smooth-height'
-import { activateWeekly, AddCardGuide, NoWallets, clearPending, savePending, savePlateAfterPay, when, type PendingRenewal, SmsHelp, SmsSwitch, useSms } from '@/components/Riverain'
+import { activateWeekly, AddCardGuide, NoWallets, clearPending, savePending, savePlateAfterPay, when, type PendingRenewal, SmsHelp, SmsLabel, SmsSwitch, useSms } from '@/components/Riverain'
 import { PlansDialog } from '@/components/Pricing'
 
 /** +33612345678 -> +33 6 12 34 56 78 (other formats are shown as they are). */
@@ -17,7 +17,7 @@ function phoneText(username: string) {
 }
 
 /** One line of the welcome page: the label on the left, the value on the right. */
-function Line({ label, children }: { label: string; children: ReactNode }) {
+function Line({ label, children }: { label: ReactNode; children: ReactNode }) {
   return (
     <div className="flex min-h-14 items-center justify-between gap-6 py-3 text-[1.05rem]">
       <dt className="shrink-0 text-ink/60">{label}</dt>
@@ -217,10 +217,10 @@ export function Welcome({
                   <span className="font-heading font-medium text-destructive">Aucune</span>
                 )}
               </Line>
-              {/* PayByPhone's paid SMS, only when their state is known: the user turns them off himself. */}
+              {/* PayByPhone's paid SMS, as they really are: their cost said, the user turns them off himself. */}
               {sms.enabled != null && (
-                <Line label="SMS PayByPhone">
-                  <SmsSwitch sms={sms} />
+                <Line label={<SmsLabel on={!!sms.enabled} />}>
+                  <SmsSwitch checked={!!sms.enabled} onPress={sms.toggle} busy={sms.busy} />
                 </Line>
               )}
             </dl>
