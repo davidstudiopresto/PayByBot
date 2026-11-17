@@ -1,5 +1,5 @@
 import { Loading } from '@/components/Loading'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import { LogOut } from 'lucide-react'
 import { PayByBot, PayByPhone, Plate, withPayByPhone } from '@/components/signs'
@@ -13,7 +13,7 @@ import { ui } from '@/lib/styles'
 import { cn } from '@/lib/utils'
 import { HostedFooter } from '@/components/Footer'
 import { CheckoutDone } from '@/components/CheckoutDone'
-import { ActivateRenewal, CardGate, RenewalOff, CoveredLine, RenewalActions, RenewalNote, RenewalSwitch, RiverainDialog, pauseState, nextRenewal, when, ZoneTag, RiverainCard, WEEKLY_LABEL, renewalOf, runPendingRenewals, takePlateAfterPay } from '@/components/Riverain'
+import { ActivateRenewal, CardGate, takeActivated, RenewalOff, CoveredLine, RenewalActions, RenewalNote, RenewalSwitch, RiverainDialog, pauseState, nextRenewal, when, ZoneTag, RiverainCard, WEEKLY_LABEL, renewalOf, runPendingRenewals, takePlateAfterPay } from '@/components/Riverain'
 import { api, type Account, type Me, type Overview, type Session } from '@/lib/api'
 
 function useNow(interval = 1000) {
@@ -85,6 +85,27 @@ function Ticket({
   const urgent = !!renewal && !renewal.enabled && !note && left < 48 * 3600000
   const hoursLeft = Math.max(1, Math.round(left / 3600000))
 
+  // Just activated (off, then on): the card confirms by itself, as Uber does, in under a second: a green halo around
+  // the switch, the tick drawn again, the next renewal fading in, a short buzz on a phone. Never on the page's load.
+  const renewOn = !!renewal?.enabled
+  const wasOn = useRef(renewOn)
+  // Shown already on, right after an activation made elsewhere (« Automatiser », the welcome page): confirmed too.
+  const [celebrating, setCelebrating] = useState(() => renewOn && takeActivated(session.plate))
+  const [celebrate, setCelebrate] = useState(() => (celebrating ? 1 : 0)) // a new key replays the tick
+  useEffect(() => {
+    if (renewOn && !wasOn.current) {
+      setCelebrate((n) => n + 1)
+      setCelebrating(true)
+      navigator.vibrate?.(15)
+    }
+    wasOn.current = renewOn
+  }, [renewOn])
+  useEffect(() => {
+    if (!celebrating) return
+    const id = setTimeout(() => setCelebrating(false), 1200)
+    return () => clearTimeout(id)
+  }, [celebrating])
+
   // Qonto-like: one white card, one 20px grid, labels left and values right, hairline dividers, a muted teal accent.
   return (
     <article data-renewal-card className="rise overflow-hidden rounded-2xl border border-ink/10 bg-white">
@@ -99,7 +120,7 @@ function Ticket({
       {/* The ticket: when it ends (renewal on) or the time left, large, with the end beside it. */}
       <div className="border-t border-ink/[0.06] px-5 py-4">
         {/* One line: until when (the time left would say it twice); in red in its last 15 minutes. */}
-        <CoveredLine end={end} soon={soon} />
+        <CoveredLine key={celebrate} end={end} soon={soon} />
         {renewing && (
           <DailyWizard
             data={data}
@@ -124,7 +145,7 @@ function Ticket({
         </div>
       )}
       {renewable && (
-        <div className="border-t border-ink/[0.06] px-5 py-4">
+        <div className={cn('border-t border-ink/[0.06] px-5 py-4', celebrating && 'renew-celebrate')}>
           {/* The switch alone, on or off: turning it on opens the renewal setup (no second button saying the same). */}
           <div>
             <RenewalSwitch
@@ -139,7 +160,7 @@ function Ticket({
               onLogout={onLogout}
               status={
                 calm && renewal ? (
-                  <span className="mt-0.5 text-sm text-ink/60">
+                  <span className={cn('mt-0.5 text-sm text-ink/60', celebrating && 'rise')}>
                     Prochain :{' '}
                     <span className="whitespace-nowrap text-ink tabular-nums">{when(nextRenewal(renewal.nextCheck, session.expire))}</span>
                   </span>

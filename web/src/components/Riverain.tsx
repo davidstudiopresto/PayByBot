@@ -76,6 +76,19 @@ export function clearPending() {
 }
 
 
+/** The cars whose weekly renewal was just activated: their ticket card, shown a moment later, confirms it once
+ *  (the activation's animation), even when it appears already on. */
+const justActivated = new Map<string, number>()
+const plateKey = (plate: string) => plate.replace(/[^0-9a-z]/gi, '').toUpperCase()
+export function markActivated(plate: string) {
+  justActivated.set(plateKey(plate), Date.now())
+}
+/** Within 15 seconds of the activation (read, not consumed: React may run a first render twice). */
+export function takeActivated(plate: string) {
+  const at = justActivated.get(plateKey(plate))
+  return at !== undefined && Date.now() - at < 15_000
+}
+
 /** What the activation did for a car, as the e-mail says it, with who pays when a payment fails. */
 export function activationToast(activation: Activation, plate?: string) {
   if (activation.failed) {
@@ -104,6 +117,7 @@ export async function runPendingRenewals(): Promise<{ done: number; weekly: numb
     keepRest(items.slice(i + 1))
     try {
       const { activation } = await api.addAutopilot({ label: WEEKLY_LABEL, ...p } as Parameters<typeof api.addAutopilot>[0])
+      if (!p.days?.length) markActivated(p.plate)
       if (p.days?.length) {
         // A non-resident ticket on precise days: nothing paid now, the first ticket comes on its day.
         shown += 1
@@ -470,6 +484,7 @@ export async function activateWeekly(cars: { plate: string; zone: string; type?:
       p = { location: car.zone, rate: rate.ratePolicyId, duration: WEEK_DAYS, unit: 'Days', plate: car.plate, paymentAccountId: payment }
       await api.quote({ ...p, renewal: true })
       const { activation } = await api.addAutopilot({ ...p, label: WEEKLY_LABEL })
+      markActivated(p.plate)
       saveLast(p)
       if (activation) activationToast(activation, cars.length > 1 ? car.plate : undefined)
       done += 1
@@ -1011,6 +1026,7 @@ export function RiverainDialog({
         const p = parking(found[plate].rate!, plate)
         // Confirmations go to the account e-mail; online, the answer says what was paid and when the next is.
         const { activation } = await api.addAutopilot({ ...p, label: WEEKLY_LABEL })
+        markActivated(p.plate)
         saveLast(p)
         if (activation) {
           activationToast(activation, ok.length > 1 ? plate : undefined)
