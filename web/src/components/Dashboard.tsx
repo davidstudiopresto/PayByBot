@@ -1,7 +1,7 @@
 import { Loading } from '@/components/Loading'
 import { useEffect, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
-import { Check, LogOut } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { PayByBot, PayByPhone, Plate, withPayByPhone } from '@/components/signs'
 import { TopBar } from '@/components/TopBar'
 import { InviteButton } from '@/components/Invite'
@@ -540,7 +540,8 @@ export function Dashboard({
       {(() => {
         const trialEnd = freeMonthPreview === 'essai' ? new Date(Date.now() + 30 * 86_400_000).toISOString()
           : !needsOffer && !me.demo && !account?.blocked ? (account?.trialEnd ?? null) : null
-        if (!trialEnd || new Date(trialEnd).getTime() <= Date.now()) return null
+        // Already subscribed (billed after the free month): nothing to do, so no bar.
+        if (!trialEnd || new Date(trialEnd).getTime() <= Date.now() || (account?.plan && freeMonthPreview !== 'essai')) return null
         {
           const days = Math.ceil((new Date(trialEnd).getTime() - Date.now()) / 86_400_000)
           return (
@@ -550,16 +551,9 @@ export function Dashboard({
                 · {days} jour{days > 1 ? 's' : ''} restant{days > 1 ? 's' : ''}
               </span>
               <span className="font-normal text-[#1f55e6]/70">·</span>
-              {account?.plan ? (
-                // Already subscribed (billed after the free month): nothing to do, said plainly.
-                <span className="inline-flex items-center gap-1">
-                  <Check className="size-3.5" strokeWidth={3} /> Compte activé
-                </span>
-              ) : (
-                <button onClick={() => setPlansOpen(true)} className="underline decoration-[#1f55e6]/40 underline-offset-[3px] transition hover:decoration-[#1f55e6]">
-                  Activer mon compte
-                </button>
-              )}
+              <button onClick={() => setPlansOpen(true)} className="underline decoration-[#1f55e6]/40 underline-offset-[3px] transition hover:decoration-[#1f55e6]">
+                Activer mon compte
+              </button>
             </div>
           )
         }

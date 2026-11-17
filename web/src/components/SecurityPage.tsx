@@ -1,8 +1,9 @@
-import { cn } from '@/lib/utils'
 import { ui } from '@/lib/styles'
 import type { ReactNode } from 'react'
-import { ArrowLeft, Building2, KeyRound, Lock, ShieldCheck } from 'lucide-react'
-import { legalBack, LEGAL_UPDATED, Mailto, PUBLISHER } from '@/components/Legal'
+import { Building2, KeyRound, Lock, ShieldCheck } from 'lucide-react'
+import { HostedFooter } from '@/components/Footer'
+import { LEGAL_UPDATED, Mailto, PUBLISHER } from '@/components/Legal'
+import { PublicTopBar } from '@/components/TopBar'
 
 const PRACTICE = [
   [Lock, 'Chiffrement', 'AES-128 avec signature HMAC-SHA256, une clé distincte par usage. HTTPS imposé partout (HSTS).'],
@@ -41,66 +42,77 @@ const SUBPROCESSORS = [
   ['Stripe', 'Paiement de l’abonnement', 'Irlande (UE)', 'PCI DSS niveau 1, SOC 2'],
 ]
 
-/** The security page, like the other legal pages: a way back, the title, the date, then small text in one column. */
-export function SecurityPage({ signedIn = false }: { hosted: boolean; signedIn?: boolean }) {
-  const back = legalBack(signedIn)
+/** « Sécurité », in the top bar: laid out like the other public pages (top bar, title and subtitle, then cards and
+ *  label / value rows, as in « Mon compte »). */
+export function SecurityPage({ hosted, signedIn = false }: { hosted: boolean; signedIn?: boolean }) {
   return (
-    <div className="min-h-dvh bg-background text-ink">
-      <main className="max-w-[34rem] px-4 pt-5 pb-20 sm:px-6">
-        <a href={back.href} className="inline-flex items-center gap-1.5 text-[0.95rem] text-ink hover:text-ink/60">
-          <ArrowLeft className="size-4" strokeWidth={1.75} /> {back.label}
-        </a>
-        <h1 className={cn(ui.title, 'mt-9')}>Sécurité et données</h1>
-        <p className="mt-4 text-[0.95rem] text-ink/60">Dernière mise à jour le {LEGAL_UPDATED}</p>
-        <p className="mt-4 text-[0.95rem] leading-[1.5] text-ink/60">
+    <div className="flex min-h-dvh flex-col bg-background text-ink">
+      <PublicTopBar signedIn={signedIn} />
+      <main className="mx-auto w-full max-w-[40rem] flex-1 px-6 pt-16 pb-20 sm:pt-20">
+        <h1 className={ui.title}>Sécurité et données</h1>
+        <p className={ui.subtitle}>
           Votre mot de passe n’est jamais stocké. Vos données sont chiffrées, hébergées à Paris, et effacées dès que vous
           arrêtez.
         </p>
 
-        <Part title="La sécurité, concrètement">
-          {PRACTICE.map(([, title, text]) => (
-            <p key={title}>
-              <strong className="font-semibold text-ink">{title}.</strong> {text}
-            </p>
+        {/* The four guarantees, as plain text: an icon, a title, one sentence. */}
+        <ul className="mt-12 grid gap-x-10 gap-y-8 sm:grid-cols-2">
+          {PRACTICE.map(([Icon, title, text]) => (
+            <li key={title}>
+              <Icon className="size-5 text-eu" strokeWidth={1.75} aria-hidden />
+              <p className="mt-3 text-[1.05rem] font-medium text-ink">{title}</p>
+              <p className="mt-1 text-sm leading-relaxed text-ink/60">{text}</p>
+            </li>
           ))}
-        </Part>
+        </ul>
 
         {FRAMEWORK.map(({ title, rows }) => (
-          <Part key={title} title={title}>
-            <ul className="ml-5 list-disc space-y-1">
-              {rows.map(([k, v]) => (
-                <li key={k} className="pl-1">
-                  {k} : {typeof v === 'string' && /^[A-ZÀ-Ý][a-zà-ÿ]/.test(v) && !/^(Studio|Union)/.test(v) ? v[0].toLowerCase() + v.slice(1) : v}
-                </li>
-              ))}
-            </ul>
-          </Part>
+          <Section key={title} title={title}>
+            {rows.map(([k, v]) => (
+              <Row key={k} label={k}>
+                {v}
+              </Row>
+            ))}
+          </Section>
         ))}
 
-        <Part title="Sous-traitants">
-          <ul className="ml-5 list-disc space-y-1">
-            {SUBPROCESSORS.map(([name, role, where, certs]) => (
-              <li key={name} className="pl-1">
-                <strong className="font-semibold text-ink">{name}</strong> : {role.toLowerCase()}, {where}. {certs}.
-              </li>
-            ))}
-          </ul>
-        </Part>
+        <Section title="Sous-traitants">
+          {SUBPROCESSORS.map(([name, role, where, certs]) => (
+            <Row key={name} label={name}>
+              <span className="block">{role}</span>
+              <span className="block text-sm text-ink/60">
+                {where} · {certs}
+              </span>
+            </Row>
+          ))}
+        </Section>
 
-        <p className="mt-10 text-[0.95rem] leading-[1.5] text-ink/60">
+        <p className="mt-10 text-[0.95rem] text-ink/60">
           Une question sur la sécurité ? <Mailto />
         </p>
+        <p className="mt-2 text-sm text-ink/45">Dernière mise à jour le {LEGAL_UPDATED}</p>
       </main>
+      <HostedFooter className="px-6 pb-8" hosted={hosted} />
     </div>
   )
 }
 
-/** A section: bold title at text size, then small text. */
-function Part({ title, children }: { title: string; children: ReactNode }) {
+/** A titled list of rows, plain text between hairlines (no box). */
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="mt-7">
-      <h2 className="text-[0.95rem] leading-[1.5] font-semibold text-ink">{title}</h2>
-      <div className="mt-1.5 space-y-3 text-[0.95rem] leading-[1.5] text-ink/60">{children}</div>
+    <section className="mt-10">
+      <h2 className="text-[1.05rem] text-ink/60">{title}</h2>
+      <div className="mt-3 divide-y divide-ink/10 border-y border-ink/10">{children}</div>
     </section>
+  )
+}
+
+/** One row: the label on the left, the value on the right. */
+function Row({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex min-h-12 items-center justify-between gap-6 py-3 text-[0.95rem]">
+      <span className="shrink-0 text-ink/60">{label}</span>
+      <span className="min-w-0 text-right text-ink">{children}</span>
+    </div>
   )
 }

@@ -24,7 +24,7 @@ const FEATURES: Question[] = [
 const FEATURE_ICONS = [RefreshCw, Pause, BellRing, Headset]
 
 /** Each step's screen (demo account, captured at one size: 1040 × 940). */
-const STEP_SHOTS = ['/how/1-connexion.png?v=14', '/how/2-activation.png?v=14', '/how/3-tableau-de-bord.png?v=15']
+const STEP_SHOTS = ['/how/1-connexion.png?v=17', '/how/2-activation.png?v=14', '/how/3-tableau-de-bord.png?v=15']
 const STEP_MS = 3500
 
 /**
@@ -84,8 +84,6 @@ export function HowItWorks({ page = false, cta }: { page?: boolean; /** Under th
   const go = (i: number) => setActive((i + DEMO_STEPS.length) % DEMO_STEPS.length)
   const Title = page ? 'h1' : 'h2'
   // Step 3: the tickets come one after the other, week after week (the newest on top), as in the video.
-  const [switched, setSwitched] = useState(false)
-  useEffect(() => setSwitched(false), [active])
   const [tickets, setTickets] = useState(0)
   useEffect(() => {
     setTickets(1) // the first one at once, then one every TICKET_MS
@@ -94,11 +92,7 @@ export function HowItWorks({ page = false, cta }: { page?: boolean; /** Under th
     return () => clearInterval(id)
   }, [active])
   const notes: Note[] = [
-    // Each step shows only its own: step 1, PayByPhone connected; step 2, the renewal, once its switch has turned on;
-    // step 3, only the tickets one after the other.
-    ...(active === 0 || (active === 1 && switched)
-      ? [{ key: `s${active}`, title: DEMO_STEPS[active].note[0], line: DEMO_STEPS[active].note[1], color: NOTE_COLORS[active], Icon: NOTE_ICONS[active] }]
-      : []),
+    // Only step 3 has notifications: the tickets one after the other (steps 1 and 2 say it already in their line).
     ...(active === 2
       ? Array.from({ length: tickets }, (_, k) => ({
           key: `t${k}`,
@@ -117,8 +111,7 @@ export function HowItWorks({ page = false, cta }: { page?: boolean; /** Under th
       <div className="rounded-2xl bg-ink/[0.035] px-5 py-8 sm:px-10 sm:py-10">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
           <div>
-            <p className="text-sm tracking-[0.18em] text-ink/45 uppercase">Démonstration</p>
-            <Title className={cn(ui.title, 'mt-3')}>
+            <Title className={ui.title}>
               Automatisez votre stationnement en <span className="whitespace-nowrap text-eu">3 étapes.</span>
             </Title>
           </div>
@@ -165,19 +158,19 @@ export function HowItWorks({ page = false, cta }: { page?: boolean; /** Under th
             <ShotLine show={active === 2} className="font-medium text-ink">
               <Check className="size-4 text-[#34C759]" strokeWidth={3} /> Véhicule couvert, sans interruption
             </ShotLine>
-            <ShotSwitch play={active === 1} auto={auto} onOn={() => setSwitched(true)} />
+            <ShotSwitch play={active === 1} auto={auto} />
           </div>
             {/* The notifications so far, the newest on top: each step adds its own (Magic UI's animated list). */}
             <div
               role="status"
-              className="mt-3 flex h-[9.75rem] flex-col gap-3 overflow-hidden"
+              className={cn('flex flex-col gap-3 overflow-hidden', notes.length > 0 && 'mt-3 h-[9.75rem]')}
             >
               <AnimatePresence initial={false} mode="popLayout">
                 {notes.slice(-2).reverse().map((n, rank) => (
                   <AnimatedListItem key={n.key}>
                     <figure
                       className={cn(
-                        'flex items-center gap-3 rounded-2xl bg-white p-3.5 transition-opacity [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_2px_4px_rgba(0,0,0,.05),0_12px_24px_rgba(0,0,0,.08)]',
+                        'flex items-center gap-3 rounded-2xl border border-ink/10 bg-white p-3.5 transition-opacity',
                         rank > 0 && 'opacity-60',
                       )}
                     >
@@ -261,7 +254,7 @@ function ShotLine({ show, children, className }: { show: boolean; children: Reac
   )
 }
 
-function ShotSwitch({ play, auto, onOn }: { play: boolean; auto: boolean; /** Once it is on. */ onOn?: () => void }) {
+function ShotSwitch({ play, auto }: { play: boolean; auto: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
   const scale = useShotScale(ref)
   const [on, setOn] = useState(false)
@@ -274,7 +267,7 @@ function ShotSwitch({ play, auto, onOn }: { play: boolean; auto: boolean; /** On
     setOn(false) // back within the 600 ms (a quick click)
     // Taking turns: it turns on as step 3 comes (its slide ending as the picture changes); shown by a click, a moment after.
     // On at once, as soon as the step's picture is there (its 0.3 s fade).
-    const id = setTimeout(() => (setOn(true), onOn?.()), auto ? STEP_MS - 250 : 300)
+    const id = setTimeout(() => setOn(true), auto ? STEP_MS - 250 : 300)
     return () => clearTimeout(id)
   }, [play, auto])
   return (
