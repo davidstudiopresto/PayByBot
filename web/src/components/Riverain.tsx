@@ -1576,10 +1576,27 @@ export function useSms() {
  *  incentive to turn them off; the user does it himself). */
 export function SmsLabel({ on }: { on: boolean }) {
   const [more, setMore] = useState(false)
+  // Just turned off by the user (not on the page's load): the line confirms it, a green tick drawn as it fades in.
+  const was = useRef(on)
+  const [justOff, setJustOff] = useState(false)
+  useEffect(() => {
+    if (was.current && !on) {
+      setJustOff(true)
+      navigator.vibrate?.(15)
+    }
+    was.current = on
+  }, [on])
   return (
     <span className="block text-left">
       Notifications SMS de <PayByPhone />
-      <span className={cn('block text-sm', on && 'text-destructive')}>
+      <span key={on ? 'on' : 'off'} className={cn('block text-sm', on && 'text-destructive', justOff && !on && 'rise')}>
+        {!on && (
+          <Check
+            className={cn('mr-1 inline size-3.5 -translate-y-px text-[#1a9a4a]', justOff && 'check-draw')}
+            strokeWidth={3}
+            aria-hidden
+          />
+        )}
         <b className="font-semibold">{on ? 'Activé' : 'Désactivé'}</b> : {on ? '0,20 à 0,25 € par SMS' : 'aucun frais (recommandé)'}
         {' · '}
         <button type="button" onClick={() => setMore(true)} className="text-ink/60 underline underline-offset-[3px] transition hover:text-ink">
