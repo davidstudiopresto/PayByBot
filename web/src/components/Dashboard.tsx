@@ -97,7 +97,7 @@ function Ticket({
       </div>
 
       {/* The ticket: when it ends (renewal on) or the time left, large, with the end beside it. */}
-      <div className="border-t border-ink/[0.06] px-5 py-5">
+      <div className="border-t border-ink/[0.06] px-5 py-4">
         {/* One line: until when (the time left would say it twice); in red in its last 15 minutes. */}
         <CoveredLine end={end} soon={soon} />
         {renewing && (
@@ -124,7 +124,7 @@ function Ticket({
         </div>
       )}
       {renewable && (
-        <div className="border-t border-ink/[0.06] px-5 py-5">
+        <div className="border-t border-ink/[0.06] px-5 py-4">
           {/* The switch alone, on or off: turning it on opens the renewal setup (no second button saying the same). */}
           <div>
             <RenewalSwitch

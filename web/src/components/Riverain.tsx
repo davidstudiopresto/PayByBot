@@ -3,7 +3,7 @@ import { Check, Loader2, Mail, Pause, Play, Repeat, RotateCw, X } from 'lucide-r
 import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { NoPayment } from '@/components/NoPayment'
-import { arrondissement, LogoMark, PayByBot, PayByPhoneMark, Plate, withPayByPhone, ZonePlate } from '@/components/signs'
+import { arrondissement, LogoMark, PayByBot, Plate, withPayByPhone, ZonePlate } from '@/components/signs'
 import { loadLast, saveLast } from '@/components/PayWizard'
 import { PlansDialog } from '@/components/Pricing'
 import { ShinyButton } from '@/components/ui/shiny-button'
@@ -583,8 +583,8 @@ export function ZoneTag({ zone, resident = true, kind }: { zone: string; residen
  *  PayByPhone offers no link to one vehicle or ticket: the app opens on its home screen. */
 export const PAYBYPHONE_APP = 'https://paybyphone.onelink.me/ZQkh/'
 
-/** A ticket card's status, said plainly: « Véhicule couvert » with a green tick, until when under it, and PayByPhone's
- *  mark to check it there. In its last 15 minutes: in red, « Bientôt terminé ». */
+/** A ticket card's status, said plainly: « Véhicule couvert » with a green tick, the time left on the right.
+ *  In its last 15 minutes: in red, « Bientôt terminé ». */
 /** « 6 j 23 h » (minutes only under a day), « 2 h 05 min », « 12 min »: what is left of a ticket. */
 function timeLeft(ms: number) {
   const min = Math.max(1, Math.floor(ms / 60_000))
@@ -602,30 +602,17 @@ export function CoveredLine({ end, soon = false }: { end: number; soon?: boolean
     const id = setInterval(() => setNow(Date.now()), 30_000)
     return () => clearInterval(id)
   }, [])
+  // Like the card's other rows: the status left, the time left right under its label (the exact end on hover).
   return (
-    <div className="flex items-center gap-3">
-      <span className="min-w-0 flex-1">
-        {/* The tick alone, before the words (no round behind it): light, still reassuring. */}
-        <span className={cn('flex items-center gap-1.5 text-[1.05rem] font-medium', soon ? 'text-destructive' : 'text-ink')}>
-          <Check className={cn('check-draw size-4 shrink-0', soon ? 'text-destructive' : 'text-[#1a9a4a]')} strokeWidth={3} />
-          {soon ? 'Bientôt terminé' : 'Véhicule couvert'}
-        </span>
-        {/* The time left, in days, hours and minutes (the exact end on hover). */}
-        <span className="block text-sm text-ink/60" title={`Jusqu’au ${when(end)}`}>
-          Temps restant : <span className="text-ink">{timeLeft(end - now)}</span>
-        </span>
+    <div className="flex items-center justify-between gap-4">
+      <span className={cn('flex min-w-0 items-center gap-1.5 text-[1.05rem] font-medium', soon ? 'text-destructive' : 'text-ink')}>
+        <Check className={cn('check-draw size-4 shrink-0', soon ? 'text-destructive' : 'text-[#1a9a4a]')} strokeWidth={3} />
+        {soon ? 'Bientôt terminé' : 'Véhicule couvert'}
       </span>
-      {/* PayByPhone's mark alone (its green keypad): check the ticket in its app. */}
-      <a
-        href={PAYBYPHONE_APP}
-        target="_blank"
-        rel="noreferrer"
-        aria-label="Voir dans l’application PayByPhone"
-        title="Voir dans PayByPhone"
-        className="-mr-1 shrink-0 p-1 transition hover:opacity-75"
-      >
-        <PayByPhoneMark className="size-5" />
-      </a>
+      <span className="shrink-0 text-right whitespace-nowrap" title={`Jusqu’au ${when(end)}`}>
+        <span className="block text-sm text-ink/60">Temps restant</span>
+        <span className="block text-[1.05rem] font-medium text-ink tabular-nums">{timeLeft(end - now)}</span>
+      </span>
     </div>
   )
 }
@@ -680,7 +667,7 @@ export function RenewalOff({ onActivate, busy = false, note = true }: { onActiva
     <div className="flex items-center justify-between gap-4">
       <span className="min-w-0">
         <span className="block text-[1.05rem] font-medium text-ink">Renouvellement auto</span>
-        {note && <span className="block text-sm text-ink/60">Non activé : plus couvert après ce ticket</span>}
+        {note && <span className="block text-sm text-destructive/85">Non couvert après ce ticket</span>}
       </span>
       <button onClick={onActivate} disabled={busy} className={cn(ui.pillBlue, 'shrink-0')} aria-label="Activer le renouvellement auto">
         {busy ? <Loader2 className="size-4 animate-spin" /> : 'Activer'}
