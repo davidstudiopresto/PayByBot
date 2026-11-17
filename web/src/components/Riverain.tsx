@@ -1559,19 +1559,50 @@ export function useSms() {
 /** The « Notifications SMS de PayByPhone » line's label: under it, what the switch's position costs (on, in red: an
  *  incentive to turn them off; the user does it himself). */
 export function SmsLabel({ on }: { on: boolean }) {
+  const [more, setMore] = useState(false)
   return (
     <span className="block text-left">
       Notifications SMS de <PayByPhone />
-      {on ? (
-        <span className="block text-sm text-destructive">
-          <b className="font-semibold">Activé</b> : 0,20 à 0,25 € par SMS
-        </span>
-      ) : (
-        <span className="block text-sm">
-          <b className="font-semibold">Désactivé</b> : aucun frais
-        </span>
-      )}
+      <span className={cn('block text-sm', on && 'text-destructive')}>
+        <b className="font-semibold">{on ? 'Activé' : 'Désactivé'}</b> : {on ? '0,20 à 0,25 € par SMS' : 'aucun frais (recommandé)'}
+        {' · '}
+        <button type="button" onClick={() => setMore(true)} className="text-ink/60 underline underline-offset-[3px] transition hover:text-ink">
+          En savoir plus
+        </button>
+      </span>
+      <SmsInfo open={more} onClose={() => setMore(false)} />
     </span>
+  )
+}
+
+/** « En savoir plus »: which SMS PayByPhone bills, why PayByBot makes them useless, and what the switch does. */
+function SmsInfo({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const items: [string, ReactNode][] = [
+    ['Ce que c’est', <>Deux options de <PayByPhone /> : un SMS de confirmation après chaque ticket, et un SMS de rappel avant sa fin.</>],
+    ['Ce que ça coûte', <>0,20 à 0,25 € par SMS selon la ville, facturés par <PayByPhone /> en plus du stationnement.</>],
+    ['Pourquoi les couper', <><PayByBot /> renouvelle vos tickets avant leur fin : le rappel ne sert plus, et chaque ticket se voit dans votre tableau de bord.</>],
+    ['Ce que fait l’interrupteur', <>Il coupe ou remet ces deux SMS sur votre compte <PayByPhone />, seulement quand vous le touchez. Le reçu par e-mail ne change pas.</>],
+  ]
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className={cn(ui.dialog, 'sm:max-w-lg')}>
+        <div className="px-6 pt-7 pb-6">
+          <DialogTitle className={ui.dialogTitle}>Les SMS de <PayByPhone /></DialogTitle>
+          <DialogDescription className="sr-only">Ce que sont les SMS payants de PayByPhone et pourquoi les couper.</DialogDescription>
+          <dl className="mt-5 space-y-4">
+            {items.map(([title, text]) => (
+              <div key={title}>
+                <dt className="text-[0.95rem] font-semibold text-ink">{title}</dt>
+                <dd className="mt-0.5 text-[0.95rem] leading-relaxed text-ink/60">{text}</dd>
+              </div>
+            ))}
+          </dl>
+          <button onClick={onClose} className={cn(ui.primary, 'mt-6')}>
+            J’ai compris
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
