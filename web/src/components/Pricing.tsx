@@ -67,9 +67,6 @@ export function PlanCards({ signedIn }: { signedIn: boolean }) {
           </div>
         ))}
       </div>
-      <p className="mx-auto mt-6 max-w-3xl text-center text-sm text-ink/45">
-        Tous vos véhicules pour ce prix : voiture, deux-roues ou utilitaire · ticket résident, visiteur ou, à Paris, carte mobilité CMI-S.
-      </p>
     </>
   )
 }
@@ -89,9 +86,6 @@ export function PricingPage({ hosted, signedIn = false }: { hosted: boolean; sig
         <div className="mt-8 lg:mt-10">
           <PlanCards signedIn={signedIn} />
         </div>
-        <p className="mt-8 text-center text-sm text-ink/60">
-          Prix TTC, sans engagement.
-        </p>
       </main>
       <HostedFooter className="px-6 pb-8" hosted={hosted} />
     </div>
