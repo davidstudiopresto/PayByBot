@@ -134,7 +134,7 @@ export function HowItWorks({ page = false, cta }: { page?: boolean; /** Under th
                       <span className={cn('w-9 shrink-0 font-heading text-[2.6rem] leading-none sm:w-12 sm:text-[3.2rem] font-light tracking-[-0.04em] transition-colors', on ? 'text-eu' : 'text-ink/20')}>
                         {i + 1}.
                       </span>
-                      <span className={cn('text-[1.2rem] leading-snug transition-colors lg:text-[1.35rem] [&_b]:font-semibold', on ? 'text-ink' : 'text-ink/45')}>
+                      <span className={cn('text-[1.1rem] leading-snug transition-colors lg:text-[1.2rem] [&_b]:font-semibold', on ? 'text-ink' : 'text-ink/45')}>
                         {brandNodes(step.text)}
                       </span>
                     </div>
