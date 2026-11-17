@@ -1,7 +1,7 @@
 import { Loading } from '@/components/Loading'
 import { useEffect, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
-import { LogOut } from 'lucide-react'
+import { Check, LogOut } from 'lucide-react'
 import { PayByBot, PayByPhone, Plate, withPayByPhone } from '@/components/signs'
 import { TopBar } from '@/components/TopBar'
 import { InviteButton } from '@/components/Invite'
@@ -82,7 +82,7 @@ function Ticket({
   const calm = !!renewal && renewal.enabled && !note
 
   // Renewal off and under 48 h left: the one thing to do on the card, said in red under the switch.
-  const urgent = !renewal?.enabled && !note && left < 48 * 3600000
+  const urgent = !!renewal && !renewal.enabled && !note && left < 48 * 3600000
   const hoursLeft = Math.max(1, Math.round(left / 3600000))
 
   // Qonto-like: one white card, one 20px grid, labels left and values right, hairline dividers, a muted teal accent.
@@ -549,13 +549,16 @@ export function Dashboard({
               <span className="font-normal text-[#1f55e6]/70">
                 · {days} jour{days > 1 ? 's' : ''} restant{days > 1 ? 's' : ''}
               </span>
-              {!account?.plan && (
-                <>
-                  <span className="font-normal text-[#1f55e6]/70">·</span>
-                  <button onClick={() => setPlansOpen(true)} className="underline decoration-[#1f55e6]/40 underline-offset-[3px] transition hover:decoration-[#1f55e6]">
-                    Activer mon compte
-                  </button>
-                </>
+              <span className="font-normal text-[#1f55e6]/70">·</span>
+              {account?.plan ? (
+                // Already subscribed (billed after the free month): nothing to do, said plainly.
+                <span className="inline-flex items-center gap-1">
+                  <Check className="size-3.5" strokeWidth={3} /> Compte activé
+                </span>
+              ) : (
+                <button onClick={() => setPlansOpen(true)} className="underline decoration-[#1f55e6]/40 underline-offset-[3px] transition hover:decoration-[#1f55e6]">
+                  Activer mon compte
+                </button>
               )}
             </div>
           )

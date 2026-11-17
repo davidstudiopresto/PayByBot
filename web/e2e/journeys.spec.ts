@@ -344,7 +344,7 @@ test('programmer un ticket : une voiture résidente mène au renouvellement de l
   await wizardButton(page).click()
   await page.getByRole('button', { name: /AB-123-CD/ }).click()
   await page.getByRole('button', { name: 'Suivant' }).click()
-  await expect(page.getByText('Renouvellement hebdomadaire')).toBeVisible()
+  await expect(page.getByText('Renouveler chaque semaine')).toBeVisible()
   await expect(page.getByText('Type de véhicule')).toBeHidden()
   await page.getByRole('button', { name: 'Précédent' }).click() // back to the vehicle, still the one chosen
   await expect(page.getByText(/Étape 1 sur 5/)).toBeVisible()

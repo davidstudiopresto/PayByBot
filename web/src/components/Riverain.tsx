@@ -3,7 +3,7 @@ import { Check, Loader2, Mail, Pause, Play, Repeat, RotateCw, X } from 'lucide-r
 import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { NoPayment } from '@/components/NoPayment'
-import { arrondissement, LogoMark, PayByBot, Plate, withPayByPhone, ZonePlate } from '@/components/signs'
+import { arrondissement, LogoMark, PayByBot, PayByPhone, Plate, withPayByPhone, ZonePlate } from '@/components/signs'
 import { loadLast, saveLast } from '@/components/PayWizard'
 import { PlansDialog } from '@/components/Pricing'
 import { ShinyButton } from '@/components/ui/shiny-button'
@@ -646,7 +646,7 @@ export function OpeningSwitch({ open, isOpen, on = false }: { open: () => void; 
     if (isOpen) setPressed(false) // the window took over: green as long as it is open
   }, [isOpen])
   const checked = on || pressed || isOpen
-  return <RenewalOff onActivate={() => !(pressed || isOpen) && (setPressed(true), open())} busy={checked} note={false} />
+  return <RenewalOff onActivate={() => !(pressed || isOpen) && (setPressed(true), open())} busy={checked} />
 }
 
 /** « Renouvellement auto », off: not a grey switch the eye skips but the one thing to do, said plainly (the car is not
@@ -887,7 +887,6 @@ export function RiverainDialog({
   const [quoteTry, setQuoteTry] = useState(0) // « Réessayer » under a vehicle whose price did not come
   const [zones, setZones] = useState<Record<string, string>>({}) // each riverain vehicle's arrondissement, from PayByPhone
   const [knownRates, setKnownRates] = useState<Record<string, Rate | null>>({}) // each one's resident rate, from the prices
-  const [weeks, setWeeks] = useState<Record<string, number | null>>({}) // the resident week's price, in cents
   const [payment, setPayment] = useState('')
   const [found, setFound] = useState<Record<string, Found>>({})
   const [loading, setLoading] = useState(false)
@@ -922,7 +921,6 @@ export function RiverainDialog({
         const riverain = (p.vehicles ?? []).filter((v) => v.zone)
         setZones(Object.fromEntries(riverain.map((v) => [v.plate, v.zone as string])))
         setKnownRates(Object.fromEntries(riverain.map((v) => [v.plate, v.rate ?? null])))
-        setWeeks(Object.fromEntries(riverain.map((v) => [v.plate, v.weekly ?? null])))
         setPlates(riverain.map((v) => v.plate))
         const same = (x: string) => !plate || x.replace(/[^0-9a-z]/gi, '').toUpperCase() === plate.replace(/[^0-9a-z]/gi, '').toUpperCase()
         setSelected(riverain.map((v) => v.plate).filter((x) => !covered.has(x) && same(x)))
@@ -1044,7 +1042,7 @@ export function RiverainDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn(ui.dialog, 'sm:max-w-lg')}>
         <div className="px-6 pt-7">
-          <DialogTitle className={ui.dialogTitle}>Renouvellement hebdomadaire</DialogTitle>
+          <DialogTitle className={ui.dialogTitle}>Renouveler chaque semaine</DialogTitle>
           {/* Opened from a car's card: the button says what to do, no sentence needed. */}
           <DialogDescription className={plate ? 'sr-only' : 'mt-1 text-ink/60'}>
             {plate ? 'Vérifiez, puis activez. On s’occupe du reste.' : "Choisissez les véhicules à renouveler, vérifiez, puis activez. On s'occupe du reste."}
@@ -1121,8 +1119,8 @@ export function RiverainDialog({
             </div>
           )}
 
-          {/* Summary: one line per ticked vehicle */}
-          <div className="rounded-xl border border-ink/10 p-4" aria-live="polite">
+          {/* Summary: one line per ticked vehicle, straight in the window (no card inside the card). */}
+          <div aria-live="polite">
             {!selected.length ? (
               <EmptyReason plates={plates} plate={plate} covered={covered} onRetry={() => setLookAgain((n) => n + 1)} />
             ) : loading ? (
@@ -1130,10 +1128,9 @@ export function RiverainDialog({
                 <Loader2 className="size-4 animate-spin" /> Recherche du tarif résident…
               </p>
             ) : (
-              <ul className="space-y-3">
+              <ul className="space-y-6">
                 {selected.map((plate) => {
                   const f = found[plate]
-                  const cents = weeks[plate] ?? (f?.quote?.cost ? Math.round(f.quote.cost.amount * 100) : null)
                   return (
                     <li key={plate} className="min-w-0">
                       {/* Like the ticket card: the plate left, « Résident | zone » right, then the price and when it is paid. */}
@@ -1141,30 +1138,15 @@ export function RiverainDialog({
                         <Plate plate={plate} size="sm" />
                         {zones[plate] && <ZoneTag zone={zones[plate]} />}
                       </span>
-                      {cents != null && !f?.error && (
-                        <span className="mt-4 block font-heading text-2xl leading-none text-ink tabular-nums">
-                          {(cents / 100).toFixed(2).replace('.', ',')} € <span className="text-[0.95rem] text-ink/60">par semaine</span>
-                        </span>
-                      )}
                       {(() => {
                         // The first payment: the day before the running ticket ends, else right away.
                         const t = data.sessions.find((x) => samePlate(x.plate, plate) && new Date(x.expire).getTime() > Date.now())
                         // Whether a ticket already runs for this car: the renewal follows it, never on top of it.
                         return (
-                          <>
-                            <span className="mt-2 block text-sm text-ink/60">
-                              {t ? (
-                                <>
-                                  Ticket en cours : <span className="whitespace-nowrap text-ink">jusqu’au {when(new Date(t.expire).getTime())}</span>
-                                </>
-                              ) : (
-                                'Aucun ticket en cours'
-                              )}
-                            </span>
-                            <span className="mt-0.5 block text-sm text-ink/60">
-                              Premier paiement : <span className="whitespace-nowrap text-ink">{t ? when(nextRenewal(null, t.expire)) : 'maintenant'}</span>
-                            </span>
-                          </>
+                          // One date only: when the first week is paid (the running ticket is kept until then).
+                          <span className="mt-4 block text-sm text-ink/60">
+                            Premier paiement : <span className="whitespace-nowrap text-ink">{t ? when(nextRenewal(null, t.expire)) : 'maintenant'}</span>
+                          </span>
                         )
                       })()}
                       {f?.error && (
@@ -1220,6 +1202,8 @@ export function RiverainDialog({
             )}
           </button>
           </div>
+          {/* Reassurance under the action, quiet. */}
+          <p className="-mt-3 text-center text-sm text-balance text-ink/60">Payé à <PayByPhone />, au même prix. Arrêt à tout moment.</p>
           {locked && onLogout && (
             <button onClick={onLogout} className={cn('mx-auto block text-sm', ui.link)}>
               Se déconnecter
