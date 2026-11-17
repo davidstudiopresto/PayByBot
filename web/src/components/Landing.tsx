@@ -398,6 +398,13 @@ export function SampleTicket({ className, interactive }: { className?: string; i
             </span>
           )}
         </div>
+        {/* Off (the interactive card, before its tap): what it means and what to do, as on a ticket card. */}
+        {interactive && !on ? (
+          <p className="mt-3 space-y-1 text-sm">
+            <span className="block text-destructive">Non renouvelé : plus couvert après ce ticket</span>
+            <span className="block text-ink/60">Touchez l’interrupteur pour l’activer</span>
+          </p>
+        ) : (
         <dl className="mt-3 space-y-1 text-sm">
           <div className="flex justify-between gap-4">
             <dt className="text-ink/60">Prochain renouvellement</dt>
@@ -408,6 +415,7 @@ export function SampleTicket({ className, interactive }: { className?: string; i
             <dd className="text-ink tabular-nums">il y a 6 jours</dd>
           </div>
         </dl>
+        )}
       </div>
     </div>
   )
@@ -438,12 +446,12 @@ export function Landing({ hosted, heroOnly = false, lean = false }: { hosted: bo
               heroOnly && 'lg:text-[2.7rem] lg:[&>span]:whitespace-nowrap',
             )}
           >
-            <span className="block bg-[linear-gradient(90deg,var(--eu)_0%,#2a66d1_100%)] bg-clip-text text-transparent">Renouvellement automatique</span>
-            <span className="block">de votre stationnement résident</span>
-            <span className="block">sur <PayByPhone /></span>
+            {/* One idea, two lines (the first in the brand gradient). */}
+            <span className="block bg-[linear-gradient(90deg,var(--eu)_0%,#2a66d1_100%)] bg-clip-text text-transparent">Votre ticket résident,</span>
+            <span className="block">renouvelé tout seul.</span>
           </h1>
           <p className="mt-6 max-w-[36rem] text-[1.05rem] leading-relaxed text-ink/60 lg:mt-8 lg:text-[1.2rem] lg:leading-[1.6]">
-            <PayByBot /> renouvelle votre stationnement résident sur <PayByPhone />, sans interruption.{' '}
+            Sur <PayByPhone />, chaque semaine, avant qu’il expire.{' '}
             <span className="font-semibold text-ink">Zéro oubli, zéro amende.</span>
           </p>
           <a
@@ -454,6 +462,8 @@ export function Landing({ hosted, heroOnly = false, lean = false }: { hosted: bo
           >
             {TRY_LABEL} <ArrowRight className="size-5" />
           </a>
+          {/* What reassures right under the button: no commitment, nothing sensitive kept. */}
+          <p className="mt-4 text-sm text-ink/60">Sans engagement · Ni carte bancaire, ni mot de passe enregistrés</p>
           {!heroOnly && !lean && (
             <>
               <p className="mt-4 text-sm text-ink/60">
