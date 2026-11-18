@@ -655,6 +655,7 @@ export function HeroLogin({ onLogin, className }: { onLogin: (me: Me) => void; c
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [remember, setRemember] = useState(false)
   const [invalid, setInvalid] = useState<Set<Field>>(new Set())
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -672,7 +673,7 @@ export function HeroLogin({ onLogin, className }: { onLogin: (me: Me) => void; c
     if (bad.size) return
     setLoading(true)
     try {
-      const result = await api.login(phoneUsername(phone, flag.code), password, true, undefined, false, await human.token())
+      const result = await api.login(phoneUsername(phone, flag.code), password, true, undefined, remember, await human.token())
       if (!isPending(result)) onLogin(result)
     } catch (e) {
       if (e instanceof ApiError && e.status === 404) {
@@ -698,9 +699,19 @@ export function HeroLogin({ onLogin, className }: { onLogin: (me: Me) => void; c
         className,
       )}
     >
-      <h2 className="pb-2 text-center font-heading text-[1.35rem] font-medium tracking-[-0.02em] text-balance text-ink lg:text-left xl:text-[1.5rem]">
-        Connectez votre compte <PayByPhone />
-      </h2>
+      <div className="pb-2 text-center lg:text-left">
+        <h2 className="font-heading text-[1.35rem] font-medium tracking-[-0.02em] text-balance text-ink xl:text-[1.5rem]">
+          Connectez votre compte <PayByPhone />
+        </h2>
+        {/* The worry at the moment of typing a password, answered in one line. */}
+        <p className="mt-1.5 text-sm text-ink/60">
+          <Lock className="mr-1 inline size-3.5 -translate-y-px" aria-hidden />
+          Mot de passe jamais enregistré.{' '}
+          <a href="#/securite" className="whitespace-nowrap text-ink underline decoration-ink/30 underline-offset-[3px] hover:decoration-ink">
+            En savoir plus
+          </a>
+        </p>
+      </div>
       <div className={box('phone')}>
         <span className="flex h-full shrink-0 items-center border-r border-ink/10 pr-3 pl-4" title="Numéro français">
           <span className="sr-only">France</span>
@@ -740,15 +751,23 @@ export function HeroLogin({ onLogin, className }: { onLogin: (me: Me) => void; c
           {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
         </button>
       </div>
-      {/* The password is PayByPhone's: its own reset page (the app on Android). */}
-      <div className="flex justify-end">
+      {/* « Se souvenir de moi » (30 days) on the left, as on the sign-in page; the password is PayByPhone's: its own
+          reset page on the right (the app on Android). */}
+      <div className="flex items-center justify-between gap-3">
+        <label className="flex cursor-pointer items-center gap-2 text-[0.95rem] whitespace-nowrap text-ink/60 max-sm:text-[0.85rem]">
+          <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="check" />
+          Se souvenir de moi
+        </label>
         <a
           href={PASSWORD_RESET_LINK}
           target={IS_ANDROID ? undefined : '_blank'}
           rel="noopener noreferrer"
-          className="text-[0.95rem] text-ink underline decoration-ink/30 underline-offset-[3px] hover:decoration-ink"
+          aria-label="Mot de passe oublié ?"
+          className="text-[0.95rem] whitespace-nowrap text-ink underline decoration-ink/30 underline-offset-[3px] hover:decoration-ink max-sm:text-[0.85rem]"
         >
-          Mot de passe oublié ?
+          {/* Short on the smallest phones, so the row stays on one line beside « Se souvenir de moi ». */}
+          <span className="max-[380px]:hidden">Mot de passe oublié ?</span>
+          <span className="min-[381px]:hidden">Oublié ?</span>
         </a>
       </div>
       {(error || human.failed) && <Notice>{withPayByPhone(error ?? human.failed ?? '')}</Notice>}
