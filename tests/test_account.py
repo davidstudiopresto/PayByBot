@@ -64,6 +64,12 @@ class Account(unittest.TestCase):
                       None, Response())
         self.assertEqual(e.exception.status_code, 409)
 
+    def test_an_account_without_email_is_not_signed_up(self):
+        # Saved by background reads (first name, zone) for an admin who logged in without signing up: no e-mail, so
+        # the home page's form sends him to the sign-up, which completes it.
+        web.save_account(self.s, {"first_name": "David", "zone": "75001"})
+        self.assertFalse(web.has_account(self.s))
+
     def sign_up(self):
         fresh = web.UserSession("demo", "", demo=True)
         fresh.demo = False

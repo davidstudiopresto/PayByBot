@@ -1942,8 +1942,11 @@ def load_account(s):
 
 
 def has_account(s):
-    """Signed up already: an account, or renewals stored before accounts existed."""
-    if load_account(s):
+    """Signed up already: an account with its e-mail (or paid), or renewals stored before accounts existed. An account
+    saved without an e-mail (background reads for an admin, who may log in unsigned) is not a sign-up: the sign-up
+    completes it."""
+    account = load_account(s)
+    if account.get("email") or account.get("stripe_subscription"):
         return True
     return bool(HOSTED and not s.demo and store("renewal_list", p_owner=owner_id(s.username)))
 

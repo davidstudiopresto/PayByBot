@@ -282,7 +282,7 @@ function IdleVehicles({ data, onChanged, hosted, demo, autoPlate, locked, onLogo
   )
   return (
     <section className="mt-10 first:mt-5">
-      <h2 className="text-[1.05rem] text-ink/60">{title}</h2>
+      <h2 className="text-[1.05rem] text-ink">{title}</h2>
       <ul className="mt-2 rounded-2xl border border-ink/10 bg-white">
         {cars.map((v) =>
           row(
@@ -617,7 +617,7 @@ export function Dashboard({
         {/* No greeting: the page opens on what matters, whether a ticket is running. Nothing automated and nothing
             running: no sentence at all, the cars and their « Automatiser » say it. */}
         {(!data || running.length > 0 || data.autopilots.some((ap) => ap.enabled && !ruleState(ap).finished)) && (
-        <h1 className="mt-2 text-[1.05rem] text-ink/60">
+        <h1 className="mt-2 text-[1.05rem] text-ink">
           {!data
             ? withPayByPhone('Chargement de votre compte PayByPhone.')
             : running.length

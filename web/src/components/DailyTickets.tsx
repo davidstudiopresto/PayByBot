@@ -1165,7 +1165,6 @@ export function DailyWizard({
                         )
                       })}
                     </div>
-                    <p className="mt-2 text-sm text-ink/45">Un ticket gratuit est pris dans chaque arrondissement coché.</p>
                   </div>
                   {nowBox}
                   <CmisAttest checked={cmis} onChange={setCmis} />
