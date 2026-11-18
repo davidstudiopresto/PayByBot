@@ -925,6 +925,8 @@ test('Claude : connecteur PayByBot de bout en bout (client, « Autoriser », cod
   await demo(page) // signed in first (the demo: on this computer only)
   let back = ''
   await page.route('https://claude.ai/**', (r) => { back = r.request().url(); return r.fulfill({ body: 'ok' }) })
+  await page.goto(LINK) // this test server is on invitation (paybybot.fr no more): the link first
+  await expect(page.getByText(CURTAIN)).toHaveCount(0, { timeout: 10_000 })
   await page.goto('/oauth/authorize?' + new URLSearchParams({ client_id, redirect_uri: redirect, response_type: 'code', state: 'st', code_challenge: digest, code_challenge_method: 'S256' }))
   await expect(page.getByRole('heading', { name: 'Autoriser Claude' })).toBeVisible()
   await page.getByRole('button', { name: 'Autoriser' }).click()
@@ -938,4 +940,46 @@ test('Claude : connecteur PayByBot de bout en bout (client, « Autoriser », cod
   expect(account.result.isError).toBeFalsy()
   expect(account.result.structuredContent.vehicules.map((v: { plate: string }) => v.plate)).toContain('AB123CD')
   expect((await request.post('/mcp', { data: {} })).status()).toBe(401) // no token: « connectez PayByBot »
+})
+
+test('Claude : sans compte PayByBot, inscription puis retour sur « Autoriser Claude », puis dans Claude', async ({ page }) => {
+  const redirect = 'https://claude.ai/api/mcp/auth_callback'
+  const { client_id } = await (await page.request.post('/oauth/register', { data: { client_name: 'Claude', redirect_uris: [redirect] } })).json()
+  // The session the server will know at « Autoriser » (the demo, on this computer); the page believes it is signed out
+  // until the sign-up's code is checked.
+  await page.request.post('/api/login', { data: { username: 'demo', password: 'demo', remember: true } })
+  let signedUp = false
+  await page.route('**/api/me', (r) => (signedUp ? r.continue() : r.fulfill({ status: 401, json: { detail: 'Session expirée' } })))
+  await page.route('**/api/login', (r) => {
+    const body = JSON.parse(r.request().postData() ?? '{}')
+    return body.signup
+      ? r.fulfill({ json: { pending: true, email: 'v•••@exemple.fr' } })
+      : r.fulfill({ status: 404, json: { detail: 'Aucun compte PayByBot pour ce compte PayByPhone.' } })
+  })
+  await page.route('**/api/signup/verify', (r) => {
+    signedUp = true
+    return r.fulfill({ json: { username: 'demo', demo: true, hosted: false } })
+  })
+  let back = ''
+  await page.route('https://claude.ai/**', (r) => { back = r.request().url(); return r.fulfill({ body: 'ok' }) })
+  await page.goto(LINK) // this test server is on invitation (paybybot.fr no more): the link first
+  await expect(page.getByText(CURTAIN)).toHaveCount(0, { timeout: 10_000 })
+  await page.goto('/oauth/authorize?' + new URLSearchParams({ client_id, redirect_uri: redirect, response_type: 'code', state: 'st',
+    code_challenge: createHash('sha256').update('x'.repeat(64)).digest('base64url'), code_challenge_method: 'S256' }))
+  // Signed out: the sign-in first, which says there is no account yet.
+  await page.getByPlaceholder('Numéro PayByPhone').fill('612345678')
+  await page.getByPlaceholder('Mot de passe PayByPhone').fill('secret')
+  await page.getByRole('button', { name: /Se connecter/ }).last().click()
+  await page.getByRole('link', { name: 'S\'inscrire' }).first().click()
+  // The sign-up, with what was typed: only the e-mail and the terms left.
+  await expect(page.locator('#username')).toHaveValue(/612345678|06 12 34 56 78/)
+  await page.getByPlaceholder('Votre e-mail').fill('vous@exemple.fr')
+  await page.getByRole('checkbox').first().check()
+  await page.getByRole('button', { name: /Continuer/ }).click()
+  await page.getByLabel('Code à 6 chiffres').fill('123456')
+  // Back on « Autoriser Claude », not the dashboard; then back in Claude with the code.
+  await expect(page.getByRole('heading', { name: 'Autoriser Claude' })).toBeVisible()
+  await page.getByRole('button', { name: 'Autoriser' }).click()
+  await expect.poll(() => back).toContain('code=')
+  expect(new URL(back).searchParams.get('state')).toBe('st')
 })

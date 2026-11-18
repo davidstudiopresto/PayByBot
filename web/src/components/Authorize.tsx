@@ -4,6 +4,7 @@ import { PublicTopBar } from '@/components/TopBar'
 import { PayByBot, PayByPhone } from '@/components/signs'
 import { Notice } from '@/components/ui/notice'
 import { api, type Me } from '@/lib/api'
+import { clearClaudeAuth } from '@/lib/claudeAuth'
 import { ui } from '@/lib/styles'
 import { cn } from '@/lib/utils'
 
@@ -38,6 +39,7 @@ export function Authorize({ me }: { me: Me }) {
     setError(null)
     try {
       const { redirect } = await api.oauthApprove(r, allow)
+      clearClaudeAuth()
       window.location.href = redirect // back to Claude
     } catch (e) {
       setError((e as Error).message)

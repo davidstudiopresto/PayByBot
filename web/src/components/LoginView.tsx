@@ -213,6 +213,8 @@ export function LoginView({
       setError((e as Error).message)
       setAccountExists(e instanceof ApiError && e.status === 409)
       setNoAccount(e instanceof ApiError && e.status === 404)
+      // No account yet: « S'inscrire » opens the sign-up with the number and password already typed.
+      if (e instanceof ApiError && e.status === 404 && mode !== 'email') handoff = { phone, password }
     } finally {
       setLoading(null)
     }

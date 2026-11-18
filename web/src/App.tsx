@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
 import { ACCOUNT_KEY, Dashboard, RESIDENTS_KEY } from '@/components/Dashboard'
 import { LoginView } from '@/components/LoginView'
+import { keepClaudeAuth, pendingClaudeAuth } from '@/lib/claudeAuth'
 import { FaqView, Home } from '@/components/Landing'
 import { HowPage } from '@/components/HowPage'
 import { AboutPage } from '@/components/AboutPage'
@@ -123,6 +124,11 @@ export default function App() {
     window.addEventListener('hashchange', open)
     return () => window.removeEventListener('hashchange', open)
   }, [])
+
+  // Opened from Claude: its request kept for this tab, through a sign-in or a sign-up.
+  useEffect(() => {
+    if (route === 'autoriser') keepClaudeAuth(new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('r') ?? '')
+  }, [route])
 
   useEffect(() => {
     const onHash = () => {
@@ -405,8 +411,10 @@ export default function App() {
       // Long enough to read the message, even when PayByPhone answers fast.
       Promise.all([api.residentZone(), new Promise((r) => setTimeout(r, 2500))]).finally(() => setZoneReady(true))
     }
-    history.replaceState(null, '', window.location.pathname + window.location.search)
-    setRoute(null)
+    // Signed in or up on the way to « Autoriser Claude »: back there, not to the dashboard.
+    const claude = pendingClaudeAuth()
+    history.replaceState(null, '', window.location.pathname + window.location.search + (claude ? '#/autoriser?r=' + claude : ''))
+    setRoute(claude ? 'autoriser' : null)
     setMe(m)
   }
 
@@ -426,7 +434,7 @@ export default function App() {
         <Loading />
       ) : route === 'autoriser' ? (
         // Opened from Claude to connect PayByBot: signed in first (the page stays), then « Autoriser ».
-        me ? <Authorize me={me} /> : <LoginView signup={false} hosted={hosted} onLogin={(m) => setMe(m)} />
+        me ? <Authorize me={me} /> : <LoginView signup={false} hosted={hosted} onLogin={(m) => signedIn(m, false)} />
       ) : inviteOnly && !me && invited !== 'yes' && route !== 'admin' && route !== 'connexion' && (!isMember() || route === 'inscription') ? (
         // Not invited: the home page, blurred, asks for an e-mail to send the link to. Signing in is always open (an
         // account already exists; the server only refuses a sign-up without a link), signing up needs a link. The
