@@ -333,13 +333,100 @@ TOOLS = [
                     "jusqu'à sa fin. Demander confirmation à l'utilisateur avant.",
      "inputSchema": obj({"renewal_id": RENEWAL_ID}, ["renewal_id"]),
      "annotations": {"readOnlyHint": False, "destructiveHint": True, "openWorldHint": False}},
+
+    # --- Everything else the site does -------------------------------------------------------------------------------
+    {"name": "edit_scheduled_ticket", "title": "Modifier un ticket programmé",
+     "description": "Change un ticket programmé (jours, heure, période, durée, zone). Le véhicule ne change pas : "
+                    "arrêter le ticket et en programmer un autre pour un autre véhicule. Confirmer avec l'utilisateur avant.",
+     "inputSchema": obj({"renewal_id": RENEWAL_ID,
+                         "days": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 6}, "minItems": 1, "maxItems": 7,
+                                  "description": "0 = lundi … 5 = samedi, 6 = dimanche (gratuit à Paris)."},
+                         "start": {"type": "string", "pattern": r"^([01]\d|2[0-3]):[0-5]\d$", "description": "HH:MM, heure de Paris."},
+                         "date_from": DAY, "date_to": DAY,
+                         "duration_hours": {"type": "number", "exclusiveMinimum": 0, "maximum": 24},
+                         "zone": {"type": "string"},
+                         "kind": {"type": "string", "enum": ["light", "heavy"], "description": "Avec zone : le poids du véhicule."}},
+                        ["renewal_id"]),
+     "annotations": {"readOnlyHint": False, "destructiveHint": False, "openWorldHint": True}},
+    {"name": "take_scheduled_now", "title": "Prendre le ticket programmé maintenant",
+     "description": "Prend tout de suite le ou les tickets d'un ticket programmé (sans attendre l'heure prévue). Payé "
+                    "par PayByPhone (sauf CMI-S). Confirmer avec l'utilisateur avant.",
+     "inputSchema": obj({"renewal_id": RENEWAL_ID}, ["renewal_id"]),
+     "annotations": {"readOnlyHint": False, "destructiveHint": False, "openWorldHint": True}},
+    {"name": "buy_ticket_now", "title": "Prendre un ticket maintenant",
+     "description": "Paie tout de suite un ticket visiteur PayByPhone, une seule fois (sans le programmer). Payé par "
+                    "PayByPhone avec la carte enregistrée. Donner le prix (get_quote) et demander confirmation avant.",
+     "inputSchema": obj({"plate": {"type": "string"}, "zone": {"type": "string"},
+                         "kind": {"type": "string", "enum": ["light", "heavy"]},
+                         "duration_hours": {"type": "number", "exclusiveMinimum": 0, "maximum": 24,
+                                            "description": "En heures (à Paris 6 h au plus)."}},
+                        ["plate", "zone", "duration_hours"]),
+     "annotations": {"readOnlyHint": False, "destructiveHint": False, "openWorldHint": True}},
+    {"name": "get_quote", "title": "Prix d'un ticket",
+     "description": "Le prix PayByPhone d'un ticket visiteur pour ce véhicule, cette zone et cette durée, sans rien payer.",
+     "inputSchema": obj({"plate": {"type": "string"}, "zone": {"type": "string"},
+                         "kind": {"type": "string", "enum": ["light", "heavy"]},
+                         "duration_hours": {"type": "number", "exclusiveMinimum": 0, "maximum": 24}},
+                        ["plate", "zone", "duration_hours"]),
+     "annotations": {"readOnlyHint": True, "openWorldHint": True}},
+    {"name": "stop_ticket", "title": "Arrêter un ticket en cours",
+     "description": "Arrête maintenant un ticket PayByPhone en cours, comme « Arrêter » dans l'application (seuls les "
+                    "tickets CMI-S que PayByPhone permet d'arrêter). Confirmer avec l'utilisateur avant.",
+     "inputSchema": obj({"ticket_ids": {"type": "array", "items": {"type": "string"}, "minItems": 1, "maxItems": 25,
+                                        "description": "Les id des tickets en cours (get_account)."}}, ["ticket_ids"]),
+     "annotations": {"readOnlyHint": False, "destructiveHint": True, "openWorldHint": True}},
+    {"name": "get_recent_zones", "title": "Zones récentes",
+     "description": "Les zones PayByPhone où l'utilisateur s'est déjà garé, de la plus récente à la plus ancienne.",
+     "inputSchema": obj(), "annotations": {"readOnlyHint": True, "openWorldHint": False}},
+    {"name": "set_renewal_email", "title": "E-mail des confirmations",
+     "description": "L'adresse e-mail qui reçoit les confirmations d'un renouvellement ou d'un ticket programmé.",
+     "inputSchema": obj({"renewal_id": RENEWAL_ID, "email": {"type": "string", "maxLength": 254}}, ["renewal_id", "email"]),
+     "annotations": {"readOnlyHint": False, "destructiveHint": False, "openWorldHint": False}},
+    {"name": "update_account", "title": "Modifier mon compte",
+     "description": "Change l'e-mail de contact du compte PayByBot ou la zone résidente notée à la main.",
+     "inputSchema": obj({"email": {"type": "string", "maxLength": 254}, "zone": {"type": "string", "maxLength": 10}}),
+     "annotations": {"readOnlyHint": False, "destructiveHint": False, "openWorldHint": False}},
+    {"name": "get_subscription", "title": "Mon abonnement",
+     "description": "Où en est le compte : mois offert, abonnement (prix, prochaine échéance, carte, factures), blocage "
+                    "éventuel, et les prix PayByBot par véhicule.",
+     "inputSchema": obj(), "annotations": {"readOnlyHint": True, "openWorldHint": False}},
+    {"name": "subscription_link", "title": "Lien de paiement de l'abonnement",
+     "description": "Le lien sécurisé Stripe à ouvrir par l'utilisateur : « subscribe » pour s'abonner, « manage » pour "
+                    "les factures et l'offre, « card » pour changer la carte. Le paiement se fait sur la page Stripe.",
+     "inputSchema": obj({"action": {"type": "string", "enum": ["subscribe", "manage", "card"]}}, ["action"]),
+     "annotations": {"readOnlyHint": True, "openWorldHint": True}},
+    {"name": "cancel_subscription", "title": "Résilier l'abonnement",
+     "description": "Résilie à la fin de la période déjà payée (cancel = true), ou annule la résiliation avant cette "
+                    "date (cancel = false). Les renouvellements s'arrêtent à la fin. Confirmer avec l'utilisateur avant.",
+     "inputSchema": obj({"cancel": {"type": "boolean"}}, ["cancel"]),
+     "annotations": {"readOnlyHint": False, "destructiveHint": True, "openWorldHint": True}},
+    {"name": "get_sms", "title": "SMS payants PayByPhone",
+     "description": "Si les SMS payants de PayByPhone (confirmation, rappel ; 0,20 à 0,25 € chacun) sont activés.",
+     "inputSchema": obj(), "annotations": {"readOnlyHint": True, "openWorldHint": True}},
+    {"name": "set_sms", "title": "Activer ou couper les SMS payants",
+     "description": "Coupe (enabled = false) ou réactive les SMS payants de PayByPhone. Seulement à la demande "
+                    "explicite de l'utilisateur : c'est son consentement.",
+     "inputSchema": obj({"enabled": {"type": "boolean"}}, ["enabled"]),
+     "annotations": {"readOnlyHint": False, "destructiveHint": False, "openWorldHint": True}},
+    {"name": "get_invite_link", "title": "Lien d'invitation",
+     "description": "Le lien d'invitation PayByBot de l'utilisateur, à partager avec ses proches.",
+     "inputSchema": obj(), "annotations": {"readOnlyHint": True, "openWorldHint": False}},
+    {"name": "delete_account", "title": "Supprimer mon compte PayByBot",
+     "description": "Efface définitivement tout ce que PayByBot garde (renouvellements, tickets programmés, compte) ; "
+                    "le compte PayByPhone n'est pas touché. Irréversible : seulement si l'utilisateur l'a demandé "
+                    "explicitement et a confirmé, avec confirm = \"SUPPRIMER\".",
+     "inputSchema": obj({"confirm": {"type": "string", "enum": ["SUPPRIMER"]}}, ["confirm"]),
+     "annotations": {"readOnlyHint": False, "destructiveHint": True, "openWorldHint": False}},
 ]
 
 
 def renewal_view(ap):
-    return {k: ap.get(k) for k in ("id", "label", "plate", "location", "locations", "enabled", "days", "start",
+    view = {k: ap.get(k) for k in ("id", "label", "plate", "location", "locations", "enabled", "days", "start",
                                    "dateFrom", "dateTo", "pausedFrom", "pausedUntil", "lastPayment", "lastError",
-                                   "nextTicket", "cmis")}
+                                   "nextTicket", "cmis", "duration", "unit", "email")}
+    if ap.get("validate"):  # a payment waits for the bank's validation: the page to open (the bank's own check)
+        view["lien_validation_banque"] = web.APP_URL.rstrip("/") + "/#/valider?t=" + ap["validate"]
+    return view
 
 
 def get_account(token, args):
@@ -490,13 +577,173 @@ def stop_renewal(token, args):
     return {"ok": True, "arrete": args["renewal_id"]}
 
 
+def visitor_parking(s, token, args):
+    """The visitor ticket asked (plate, zone, weight, hours) as the wizard would make it, with the card to pay."""
+    zone = str(args.get("zone") or "").strip()
+    vehicle = next((v for v in web.guarded(lambda: s.call("get_vehicles")) or []
+                    if web.plate_key(v.get("licensePlate") or "") == web.plate_key(args.get("plate") or "")
+                    and not v.get("archived")), None)
+    if not vehicle:
+        raise HTTPException(400, "Ce véhicule n'est pas sur votre compte PayByPhone.")
+    rate = pick_rate(web.rates(zone, vehicle["licensePlate"], token), args.get("kind") or "light")
+    units = [u for u in rate.get("acceptedTimeUnits") or [] if u != "Days"]
+    most = 6 if web.PARIS_ZONE.match(zone) else 24
+    hours = min(float(args.get("duration_hours") or most), most)
+    if "Hours" in units and hours == int(hours):
+        unit, duration = "Hours", int(hours)
+    elif "Minutes" in units:
+        unit, duration = "Minutes", int(round(hours * 60))
+    else:
+        raise HTTPException(400, "Ce tarif ne se prend pas à l'heure : faites-le depuis le site.")
+    cards = [p for p in web.normalize_accounts(web.guarded(lambda: s.call("get_payment_accounts")) or {})
+             if p.get("kind") == "card" and not p.get("expired")]
+    if not cards:
+        raise HTTPException(400, "Aucune carte bancaire valide dans PayByPhone : ajoutez-en une dans l'application.")
+    return rate, dict(location=zone, rate=str(rate["ratePolicyId"]), duration=duration, unit=unit,
+                      plate=vehicle["licensePlate"], paymentAccountId=cards[0]["id"])
+
+
+def get_quote(token, args):
+    s = web.current(token)
+    rate, parking = visitor_parking(s, token, args)
+    q = web.quote(web.QuoteRequest(**parking), token) or {}
+    return {"tarif": rate.get("name"), "duree": "%s %s" % (parking["duration"], "h" if parking["unit"] == "Hours" else "min"),
+            "prix": q.get("cost"), "debut": q.get("start"), "fin": q.get("expire")}
+
+
+def buy_ticket_now(token, args):
+    s = web.current(token)
+    rate, parking = visitor_parking(s, token, args)
+    paid = web.pay(web.Parking(**parking), token)
+    return {"ok": True, "tarif": rate.get("name"), "fin": paid.get("expire"), "prix": paid.get("cost")}
+
+
+def own_renewal(token, renewal_id):
+    found = next((ap for ap in web.overview(token)["autopilots"] if ap.get("id") == renewal_id), None)
+    if not found:
+        raise HTTPException(404, "Renouvellement ou ticket programmé introuvable.")
+    return found
+
+
+def edit_scheduled_ticket(token, args):
+    ap = own_renewal(token, args["renewal_id"])
+    if not ap.get("days"):
+        raise HTTPException(400, "Seuls les tickets programmés se modifient (le renouvellement résident : pause ou arrêt).")
+    fields = {k: ap.get(k) for k in ("location", "rate", "duration", "unit", "plate", "paymentAccountId", "label",
+                                     "email", "days", "start", "dateFrom", "dateTo", "locations")}
+    fields["cmis"] = bool(ap.get("cmis"))
+    if args.get("zone") and not fields["cmis"]:
+        s = web.current(token)
+        rate, parking = visitor_parking(s, token, {"plate": ap["plate"], "zone": args["zone"], "kind": args.get("kind"),
+                                                   "duration_hours": args.get("duration_hours")})
+        fields.update(location=parking["location"], rate=parking["rate"], unit=parking["unit"], duration=parking["duration"])
+    elif args.get("duration_hours") and not fields["cmis"]:
+        hours = min(float(args["duration_hours"]), 6 if web.PARIS_ZONE.match(str(fields["location"])) else 24)
+        fields.update(unit="Hours", duration=int(hours)) if hours == int(hours) else fields.update(unit="Minutes", duration=int(round(hours * 60)))
+    if args.get("start"):
+        fields["start"] = args["start"]
+    if args.get("date_from") or args.get("date_to"):
+        fields.update(dateFrom=args.get("date_from") or args.get("date_to"), dateTo=args.get("date_to") or args.get("date_from"),
+                      days=list(range(7)))
+    elif args.get("days"):
+        days = sorted(set(args["days"]))
+        if web.PARIS_ZONE.match(str(fields["location"])):
+            days = [d for d in days if d != 6] or days
+        fields.update(days=days, dateFrom=None, dateTo=None)
+    fields["duration"] = float(fields["duration"])
+    body = web.Autopilot(**{k: v for k, v in fields.items() if v is not None}, tz="Europe/Paris")
+    return renewal_view(web.edit_autopilot(args["renewal_id"], body, token))
+
+
+def take_scheduled_now(token, args):
+    got = web.take_now(args["renewal_id"], token) or {}
+    return {"couverts": got.get("covered"), "sur": got.get("total"), "suite_par_le_planificateur": bool(got.get("more")),
+            "erreur": got.get("error")}
+
+
+def stop_ticket(token, args):
+    return web.stop_tickets(web.StopTickets(ids=args["ticket_ids"]), token) or {"ok": True}
+
+
+def get_recent_zones(token, args):
+    return {"zones": web.recent_zones(token)}
+
+
+def set_renewal_email(token, args):
+    return renewal_view(web.change_autopilot_email(args["renewal_id"], web.EmailChange(email=args["email"]), token))
+
+
+def update_account(token, args):
+    patch = {k: args[k] for k in ("email", "zone") if k in args}
+    if not patch:
+        raise HTTPException(400, "Rien à changer : donnez un e-mail ou une zone.")
+    out = web.update_account(web.AccountPatch(**patch), token)
+    return out if isinstance(out, dict) else {"ok": True}
+
+
+def get_subscription(token, args):
+    account = web.get_account(token)
+    out = {"compte": {k: account.get(k) for k in ("plan", "trialEnd", "trialDays", "blocked", "graceEnd",
+                                                   "subscriptionEnded", "subscribed")}}
+    try:
+        out["abonnement"] = web.billing_subscription(token)
+    except HTTPException as e:
+        out["abonnement"] = None if e.status_code in (400, 404) else str(e.detail)
+    try:
+        out["prix"] = web.pricing(token)
+    except HTTPException:
+        pass
+    return out
+
+
+def subscription_link(token, args):
+    action = args["action"]
+    if action == "subscribe":
+        got = web.billing_checkout(web.Checkout(plan="monthly"), None, token)
+    elif action == "manage":
+        got = web.billing_portal(token)
+    else:
+        got = web.billing_card(token)
+    return {"lien": got.get("url"), "a_ouvrir_par": "l'utilisateur (page sécurisée Stripe)"}
+
+
+def cancel_subscription(token, args):
+    out = web.billing_cancel(web.CancelChoice(cancel=bool(args["cancel"])), token)
+    return out if isinstance(out, dict) else {"ok": True}
+
+
+def get_sms(token, args):
+    return web.sms_get(token)
+
+
+def set_sms(token, args):
+    return web.sms_set(web.SmsSetting(enabled=bool(args["enabled"])), token)
+
+
+def get_invite_link(token, args):
+    return web.my_invite(token)
+
+
+def delete_account(token, args):
+    if args.get("confirm") != "SUPPRIMER":
+        raise HTTPException(400, "Suppression non confirmée.")
+    out = web.delete_my_data(Response(), token)
+    return out if isinstance(out, dict) else {"ok": True, "supprime": True}
+
+
 HANDLERS = {"get_account": get_account, "get_history": get_history, "activate_renewal": activate_renewal,
             "schedule_ticket": schedule_ticket,
-            "schedule_handi_ticket": schedule_handi_ticket, "pause_renewal": pause_renewal, "resume_renewal": resume_renewal, "stop_renewal": stop_renewal}
+            "schedule_handi_ticket": schedule_handi_ticket, "pause_renewal": pause_renewal, "resume_renewal": resume_renewal, "stop_renewal": stop_renewal,
+            "edit_scheduled_ticket": edit_scheduled_ticket, "take_scheduled_now": take_scheduled_now,
+            "buy_ticket_now": buy_ticket_now, "get_quote": get_quote, "stop_ticket": stop_ticket,
+            "get_recent_zones": get_recent_zones, "set_renewal_email": set_renewal_email, "update_account": update_account,
+            "get_subscription": get_subscription, "subscription_link": subscription_link,
+            "cancel_subscription": cancel_subscription, "get_sms": get_sms, "set_sms": set_sms,
+            "get_invite_link": get_invite_link, "delete_account": delete_account}
 
 INSTRUCTIONS = ("PayByBot renouvelle automatiquement les tickets de stationnement PayByPhone (ticket résident chaque "
                 "semaine, tickets programmés certains jours). Commencez par get_account. Les tickets sont payés par "
-                "PayByPhone avec la carte de l'utilisateur : confirmez avec lui avant activate_renewal, schedule_ticket ou stop_renewal.")
+                "PayByPhone avec la carte de l'utilisateur : récapitulez et confirmez avec lui avant tout ce qui paie, arrête, résilie ou supprime. Les paiements Stripe et la validation bancaire se font sur la page dont l'outil donne le lien, ouverte par l'utilisateur.")
 
 
 def call_tool(state, name, args):

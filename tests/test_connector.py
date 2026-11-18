@@ -264,5 +264,66 @@ class ScheduleTicket(unittest.TestCase):
         with self.assertRaises(HTTPException):
             self.schedule(plate="ZZ999ZZ", days=[0])
 
+
+class EverythingElse(unittest.TestCase):
+    """The rest of the site through Claude: each tool calls the site's own route, with what the wizard would send."""
+    AP = {"id": "r1", "plate": "AB-123-CD", "location": "75012", "rate": "2", "duration": "6", "unit": "Hours",
+          "paymentAccountId": "card1", "label": "Jours précis", "email": "", "days": [0, 2], "start": "09:00",
+          "dateFrom": None, "dateTo": None, "locations": None, "cmis": False}
+
+    def setUp(self):
+        os.environ["PAYBYBOT_SECRET"] = "t"
+        self.s = MagicMock()
+        self.s.call.side_effect = lambda method, *a, **k: [{"licensePlate": "AB-123-CD"}] if method == "get_vehicles" else \
+            {"paymentCards": [{"paymentAccountId": "card1", "cardType": "Visa", "maskedCardNumber": "4242"}]}
+        self.patches = [patch.object(web, "current", return_value=self.s),
+                        patch.object(web, "rates", return_value=ScheduleTicket.RATES),
+                        patch.object(web, "overview", return_value={"autopilots": [self.AP]})]
+        for x in self.patches:
+            x.start()
+
+    def tearDown(self):
+        for x in self.patches:
+            x.stop()
+
+    def test_edit_keeps_the_rest_and_drops_sunday_in_paris(self):
+        sent = []
+        with patch.object(web, "edit_autopilot", side_effect=lambda i, body, t: sent.append((i, body)) or {**self.AP, "id": i}):
+            connector.edit_scheduled_ticket("tok", {"renewal_id": "r1", "days": [1, 6], "start": "10:30"})
+        i, body = sent[0]
+        self.assertEqual((i, body.days, body.start, body.rate, body.location, body.duration), ("r1", [1], "10:30", "2", "75012", 6.0))
+
+    def test_buy_now_pays_the_visitor_rate(self):
+        with patch.object(web, "pay", side_effect=lambda body, t: {"ok": True, "expire": "x", "cost": {"amount": 4}}) as pay:
+            out = connector.buy_ticket_now("tok", {"plate": "ab123cd", "zone": "75012", "kind": "heavy", "duration_hours": 2})
+        body = pay.call_args.args[0]
+        self.assertEqual((body.rate, body.unit, body.duration, body.paymentAccountId), ("3", "Hours", 2, "card1"))
+        self.assertTrue(out["ok"])
+
+    def test_links_to_stripe(self):
+        with patch.object(web, "billing_checkout", return_value={"url": "https://checkout"}) as checkout, \
+                patch.object(web, "billing_portal", return_value={"url": "https://portal"}):
+            self.assertEqual(connector.subscription_link("tok", {"action": "subscribe"})["lien"], "https://checkout")
+            self.assertEqual(connector.subscription_link("tok", {"action": "manage"})["lien"], "https://portal")
+        self.assertEqual(checkout.call_args.args[0].plan, "monthly")
+
+    def test_delete_needs_the_word(self):
+        with patch.object(web, "delete_my_data") as wipe:
+            with self.assertRaises(HTTPException):
+                connector.delete_account("tok", {})
+            wipe.assert_not_called()
+            connector.delete_account("tok", {"confirm": "SUPPRIMER"})
+            wipe.assert_called_once()
+
+    def test_sms_switch_and_bank_link(self):
+        with patch.object(web, "sms_set", return_value={"enabled": False}) as sms:
+            connector.set_sms("tok", {"enabled": False})
+        self.assertFalse(sms.call_args.args[0].enabled)
+        view = connector.renewal_view({**self.AP, "validate": "abc"})
+        self.assertTrue(view["lien_validation_banque"].endswith("/#/valider?t=abc"))
+
+    def test_every_tool_has_its_handler(self):
+        self.assertEqual({t["name"] for t in connector.TOOLS}, set(connector.HANDLERS))
+
 if __name__ == "__main__":
     unittest.main()
