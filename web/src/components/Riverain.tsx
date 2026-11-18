@@ -656,7 +656,8 @@ function PayByPhoneLink() {
       rel="noopener noreferrer"
       aria-label="Voir le ticket sur PayByPhone"
       title="Voir le ticket sur PayByPhone"
-      className="flex shrink-0 items-center gap-1 rounded-full bg-ink/[0.05] px-3 py-1.5 text-sm font-medium text-ink transition hover:bg-ink/[0.09] max-sm:px-2.5 max-sm:text-[0.8rem]"
+      // The same pill as the zone above it (« CMI-S – 75001 »): same height, padding and size.
+      className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-ink/[0.06] px-3 text-sm leading-none whitespace-nowrap text-ink transition hover:bg-ink/[0.1]"
     >
       <PayByPhone />
       <ArrowUpRight className="size-4 text-ink/45 max-sm:hidden" aria-hidden />

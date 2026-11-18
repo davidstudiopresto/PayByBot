@@ -155,11 +155,10 @@ function AccountDialog({
                       <li className={cn(rowClass, 'text-ink/60')}>{data.vehicles.length ? 'Aucun véhicule au tarif résident' : 'Aucun véhicule'}</li>
                     </Rows>
                   )
-                // Hairlines between the cells (the box's grey showing through a 1px gap); an odd last line filled white.
+                // One box, no lines between the cars: the plates alone make the grid.
                 return (
-                  <ul className={cn('grid gap-px overflow-hidden rounded-xl border border-ink/10 bg-ink/[0.08]', cells.length > 1 && 'min-[360px]:grid-cols-2')}>
+                  <ul className={cn('grid overflow-hidden rounded-xl border border-ink/10 bg-white', cells.length > 1 && 'min-[360px]:grid-cols-2')}>
                     {cells}
-                    {cells.length > 1 && cells.length % 2 === 1 && <li aria-hidden className="hidden bg-white min-[360px]:block" />}
                   </ul>
                 )
               })()}
@@ -286,7 +285,8 @@ function Section({ title, children }: { title?: string; children: React.ReactNod
 }
 
 function Rows({ children }: { children: React.ReactNode }) {
-  return <ul className="divide-y divide-ink/[0.08] overflow-hidden rounded-xl border border-ink/10 bg-white">{children}</ul>
+  // One box per section, no lines between its rows (lighter).
+  return <ul className="overflow-hidden rounded-xl border border-ink/10 bg-white">{children}</ul>
 }
 
 /** An icon in place of the label (the label kept for screen readers), the value beside it, an action on the right. */
