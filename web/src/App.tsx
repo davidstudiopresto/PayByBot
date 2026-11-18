@@ -289,7 +289,7 @@ export default function App() {
           // Requests sent together may renew the PayByPhone login at the same time and one be refused: once more,
           // with the cookie the other one brought back, before asking to log in again.
           if (!(e instanceof ApiError && e.status === 401)) throw e
-          await new Promise((r) => setTimeout(r, 1500))
+          await new Promise((r) => setTimeout(r, 400))
           return api.overview()
         }),
       )
@@ -408,8 +408,8 @@ export default function App() {
       trackLinkStep('inscrit')
       setOnboarding(true)
       setZoneReady(false)
-      // Long enough to read the message, even when PayByPhone answers fast.
-      Promise.all([api.residentZone(), new Promise((r) => setTimeout(r, 2500))]).finally(() => setZoneReady(true))
+      // The zone was looked for while the code was read (/api/signup/zone): usually there already, never waited for.
+      api.residentZone().finally(() => setZoneReady(true))
     }
     // Signed in or up on the way to « Autoriser Claude »: back there, not to the dashboard.
     const claude = pendingClaudeAuth()

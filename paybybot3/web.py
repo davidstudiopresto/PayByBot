@@ -536,7 +536,14 @@ async def persist_session(request: Request, call_next):
         return JSONResponse({"detail": "Requête refusée."}, status_code=403, headers=SECURITY_HEADERS)
     holder = []
     _loaded.set(holder)
+    began = time.perf_counter()
     response = await call_next(request)
+    # How long each call took (path and status only, never a value): which screens are slow, measured, not guessed.
+    took = int((time.perf_counter() - began) * 1000)
+    if request.url.path.startswith(("/api/", "/mcp", "/oauth/")):
+        log.info("timing %s %s %s %d ms", request.method, re.sub(r"/[0-9a-f]{6,}(?=/|$)", "/:id", request.url.path),
+                 response.status_code, took)
+        response.headers.setdefault("Server-Timing", "app;dur=%d" % took)
     if HOSTED and holder and response.status_code != 401 and not getattr(holder[-1], "logged_out", False):
         set_session_cookie(response, seal(holder[-1]), getattr(holder[-1], "remember", False))
     for name, value in SECURITY_HEADERS.items():
