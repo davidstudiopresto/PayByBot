@@ -3,6 +3,8 @@ import { ArrowRight, BellRing, Star, CreditCard, Headset, Pause, Plus, RefreshCw
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { HostedFooter } from '@/components/Footer'
 import { PublicTopBar } from '@/components/TopBar'
+import { HeroLogin } from '@/components/LoginView'
+import type { Me } from '@/lib/api'
 import { PlanCards } from '@/components/Pricing'
 import { cn } from '@/lib/utils'
 import { ToggleSwitch } from '@/components/ui/toggle-switch'
@@ -320,8 +322,8 @@ function Testimonials() {
 
 /** Public home page: one message, the automatic renewal. */
 /** The home page: the v1 hero alone (no sections below). */
-export function Home({ hosted }: { hosted: boolean }) {
-  return <Landing hosted={hosted} heroOnly />
+export function Home({ hosted, onLogin }: { hosted: boolean; onLogin?: (me: Me) => void }) {
+  return <Landing hosted={hosted} heroOnly onLogin={onLogin} />
 }
 
 /** The home page's example: a ticket card as on the dashboard, renewal on, with made-up data (no real account). */
@@ -408,7 +410,7 @@ export function SampleTicket({ className, interactive }: { className?: string; i
   )
 }
 
-export function Landing({ hosted, heroOnly = false, lean = false }: { hosted: boolean; heroOnly?: boolean; lean?: boolean }) {
+export function Landing({ hosted, heroOnly = false, lean = false, onLogin }: { hosted: boolean; heroOnly?: boolean; lean?: boolean; onLogin?: (me: Me) => void }) {
   const cta = useRef<HTMLAnchorElement>(null)
   const sticky = useStickyCta(cta)
   return (
@@ -438,9 +440,11 @@ export function Landing({ hosted, heroOnly = false, lean = false }: { hosted: bo
             <span className="block">sur <PayByPhone /></span>
           </h1>
           <p className="mt-6 max-w-[36rem] text-[1.05rem] leading-relaxed text-ink/60 lg:mt-8 lg:text-[1.2rem] lg:leading-[1.6]">
-            <PayByBot /> renouvelle votre stationnement résident sur <PayByPhone />, sans interruption.{' '}
+            Activez-le une fois, <PayByBot /> reprend votre ticket chaque semaine.{' '}
             <span className="font-semibold text-ink">Zéro oubli, zéro amende.</span>
           </p>
+          {/* Home: the sign-in card on the right replaces the button. Elsewhere, the button to the sign-up. */}
+          {onLogin ? null : (
           <a
             ref={cta}
             href="#/inscription"
@@ -449,6 +453,7 @@ export function Landing({ hosted, heroOnly = false, lean = false }: { hosted: bo
           >
             {TRY_LABEL} <ArrowRight className="size-5" />
           </a>
+          )}
           {!heroOnly && !lean && (
             <>
               <p className="mt-4 text-sm text-ink/60">
@@ -458,7 +463,8 @@ export function Landing({ hosted, heroOnly = false, lean = false }: { hosted: bo
             </>
           )}
         </div>
-        {heroOnly && <SampleTicket interactive className="mx-auto lg:mx-0 lg:justify-self-end lg:origin-right lg:scale-[1.15] xl:scale-[1.25] 2xl:scale-[1.35]" />}
+        {heroOnly && onLogin && <HeroLogin onLogin={onLogin} className="mx-auto lg:mx-0 lg:justify-self-end" />}
+        {heroOnly && !onLogin && <SampleTicket interactive className="mx-auto lg:mx-0 lg:justify-self-end lg:origin-right lg:scale-[1.15] xl:scale-[1.25] 2xl:scale-[1.35]" />}
         </div>
       </section>
 

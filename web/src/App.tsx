@@ -394,6 +394,21 @@ export default function App() {
       </>
     )
 
+  // Signed in from « Se connecter », « S'inscrire » or the home page's form.
+  function signedIn(m: Me, signup: boolean) {
+    forgetZoneLookup()
+    if (signup) {
+      trackLinkStep('inscrit')
+      setOnboarding(true)
+      setZoneReady(false)
+      // Long enough to read the message, even when PayByPhone answers fast.
+      Promise.all([api.residentZone(), new Promise((r) => setTimeout(r, 2500))]).finally(() => setZoneReady(true))
+    }
+    history.replaceState(null, '', window.location.pathname + window.location.search)
+    setRoute(null)
+    setMe(m)
+  }
+
   return (
     <Suspense fallback={<Loading />}>
       <Toaster />
@@ -426,25 +441,9 @@ export default function App() {
         <AboutPage hosted={hosted} signedIn={!!me} />
       ) : me === null ? (
         route === 'connexion' || route === 'inscription' ? (
-          <LoginView
-            signup={route === 'inscription'}
-            hosted={hosted}
-            onLogin={(m) => {
-              forgetZoneLookup()
-              if (route === 'inscription') {
-                trackLinkStep('inscrit')
-                setOnboarding(true)
-                setZoneReady(false)
-                // Long enough to read the message, even when PayByPhone answers fast.
-                Promise.all([api.residentZone(), new Promise((r) => setTimeout(r, 2500))]).finally(() => setZoneReady(true))
-              }
-              history.replaceState(null, '', window.location.pathname + window.location.search)
-              setRoute(null)
-              setMe(m)
-            }}
-          />
+          <LoginView signup={route === 'inscription'} hosted={hosted} onLogin={(m) => signedIn(m, route === 'inscription')} />
         ) : (
-          <Home hosted={hosted} />
+          <Home hosted={hosted} onLogin={(m) => signedIn(m, false)} />
         )
       ) : (onboarding && (!data || !zoneReady)) || !data ? (
         <Loading

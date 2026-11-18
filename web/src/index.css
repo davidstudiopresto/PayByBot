@@ -245,11 +245,11 @@ input:-webkit-autofill:focus {
   transition: background-color 600000s 0s;
 }
 
-/* Chrome previews an autofill suggestion in its own smaller font, then switches to ours on click (the text seems
-   to grow): give the preview the field's own font and size. */
-input:-webkit-autofill::first-line {
-  font-family: 'Figtree Variable', sans-serif;
-  font-size: 1.125rem;
+/* Chrome shows a saved number and password, filled at page load, in its own smaller system font until the page is
+   clicked (the text then seems to grow): the field's own font and size, in every state, not only « autofill ». */
+input::first-line {
+  font-family: inherit;
+  font-size: inherit;
 }
 
 /* ShinyButton: the light sweeping from right to left, then a pause (CSS only). */

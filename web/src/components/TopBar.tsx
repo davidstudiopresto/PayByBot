@@ -23,7 +23,7 @@ export function TopBar({ center, children, className }: { center?: ReactNode; ch
   )
 }
 
-const navLink = 'hidden px-2 text-[0.95rem] font-medium text-ink/60 transition hover:text-ink sm:inline'
+const navLink = 'hidden px-2 text-[0.95rem] font-medium text-ink/60 transition hover:text-ink lg:inline'
 
 const PAGES = [
   ['#/tarifs', 'Tarifs'],
@@ -49,14 +49,14 @@ function MobileMenu({ signedIn }: { signedIn: boolean }) {
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
-        className="grid size-10 place-items-center rounded-lg text-ink transition hover:bg-ink/[0.05] sm:hidden"
+        className="grid size-10 place-items-center rounded-lg text-ink transition hover:bg-ink/[0.05] lg:hidden"
       >
         {open ? <X className="size-6" /> : <Menu className="size-6" />}
       </button>
  {/* In a portal: the bar's backdrop blur would otherwise hold a « fixed » panel inside its own 4rem. */}
       {open &&
         createPortal(
-        <nav aria-label="Pages" className="fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto bg-background px-6 pt-2 sm:hidden">
+        <nav aria-label="Pages" className="fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto bg-background px-6 pt-2 lg:hidden">
           {PAGES.map(([href, label]) => (
             <a key={href} href={href} onClick={() => setOpen(false)} className="block border-b border-ink/10 py-4 text-xl font-medium text-ink">
               {label}
@@ -95,14 +95,14 @@ export function PublicTopBar({ signedIn = false }: { signedIn?: boolean }) {
         </a>
       ) : (
         <>
-          <a href="#/connexion" className={cn(ui.pillGray, 'hidden sm:inline-flex')}>
+          <a href="#/connexion" className={cn(ui.pillGray, 'hidden lg:inline-flex')}>
             Se connecter
           </a>
-          <a href="#/inscription" className={cn(ui.pillBlue, 'hidden sm:inline-flex')}>
+          <a href="#/inscription" className={cn(ui.pillBlue, 'hidden lg:inline-flex')}>
             {TRY_LABEL}
           </a>
           {/* On a phone, room for one button: « Se connecter » (signing up is in the ☰ menu and on the page). */}
-          <a href="#/connexion" className={cn(ui.pillBlue, 'sm:hidden')}>
+          <a href="#/connexion" className={cn(ui.pillBlue, 'lg:hidden')}>
             Se connecter
           </a>
         </>

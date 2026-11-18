@@ -61,6 +61,9 @@ function phoneUsername(national: string, code: string) {
 
 type Field = 'phone' | 'email' | 'signupEmail' | 'password' | 'terms'
 
+/** From the home page's form to the sign-up page: what was typed there, in memory only (never stored, never in the URL). */
+let handoff: { phone: string; password: string } | null = null
+
 const fieldBox =
   'flex h-14 items-center rounded-xl border border-ink/20 bg-white transition focus-within:border-eu focus-within:ring-3 focus-within:ring-eu/15 overflow-hidden'
 
@@ -77,9 +80,15 @@ export function LoginView({
 }) {
   const [mode, setMode] = useState<'phone' | 'email'>('phone') // PayByPhone identifier: phone number by default
   const country = 'FR'
-  const [phone, setPhone] = useState('')
+  // Sent here by the home page's form (no PayByBot account yet): the number and password come along, taken once.
+  const [handed] = useState(() => {
+    const h = signup ? handoff : null
+    handoff = null
+    return h
+  })
+  const [phone, setPhone] = useState(handed?.phone ?? '')
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [password, setPassword] = useState(handed?.password ?? '')
   const [signupEmail, setSignupEmail] = useState('')
   const [invalid, setInvalid] = useState<Set<Field>>(new Set())
   const fixed = (f: Field) => setInvalid((x) => (x.has(f) ? new Set([...x].filter((y) => y !== f)) : x))
@@ -121,7 +130,9 @@ export function LoginView({
     setNoAccount(false)
     setAccountExists(false)
     setNoResident(null)
-    setInvalid(new Set())
+    // Sent by the home page's form: only the e-mail and the terms are left, framed in red to show them.
+    setInvalid(handed && signup ? new Set<Field>(['signupEmail', 'terms']) : new Set())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signup])
 
   // Sign-up: say right away, once the number is typed, that it is already signed up.
@@ -249,8 +260,11 @@ export function LoginView({
           <h1
             className={ui.title}
           >
-            {title ?? (signup ? <>Inscrivez-vous avec vos identifiants <PayByPhone /></> : <>Connexion à <PayByBot /></>)}
+            {title ?? (signup ? <>Inscrivez-vous avec vos <span className="sm:whitespace-nowrap">identifiants <PayByPhone /></span></> : <>Connexion à <PayByBot /></>)}
           </h1>
+          {handed && (
+            <p className="mt-3 text-[1.05rem] leading-relaxed text-ink/60">Pas encore de compte <PayByBot /> : ajoutez votre e-mail pour le créer.</p>
+          )}
           {/* Sign-up: the title says it all, no line under it. */}
           {!signup && (
             <p className="mt-3 text-[1.05rem] leading-relaxed text-ink/60">
@@ -307,7 +321,7 @@ export function LoginView({
                   aria-label="Numéro de téléphone"
                   aria-invalid={invalid.has('phone') || undefined}
                   required
-                  className="h-full min-w-0 flex-1 bg-transparent px-2 text-lg text-ink tabular-nums outline-none placeholder:text-ink/30"
+                  className="h-full w-0 min-w-0 flex-1 bg-transparent px-2 text-lg text-ink tabular-nums outline-none placeholder:text-ink/30"
                 />
               </div>
             ) : (
@@ -620,5 +634,118 @@ function CodeStep({
       </main>
       <HostedFooter className="px-6 pb-8" hosted={hosted} linksOnly />
     </div>
+  )
+}
+
+/** The home page's form: number and password, then signed in, or on to the sign-up (number and password kept) when
+ *  this PayByPhone account has no PayByBot account yet. Phone only: the e-mail login stays on « Se connecter ». */
+export function HeroLogin({ onLogin, className }: { onLogin: (me: Me) => void; className?: string }) {
+  const [phone, setPhone] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [invalid, setInvalid] = useState<Set<Field>>(new Set())
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const human = useTurnstile()
+  const flag = COUNTRIES[0]
+  const box = (f: Field) => cn(fieldBox, invalid.has(f) && 'border-destructive ring-3 ring-destructive/15 focus-within:border-destructive focus-within:ring-destructive/15')
+  const fixed = (f: Field) => setInvalid((x) => (x.has(f) ? new Set([...x].filter((y) => y !== f)) : x))
+
+  async function submit() {
+    setError(null)
+    const bad = new Set<Field>()
+    if (phoneProblem(phone)) bad.add('phone')
+    if (!password) bad.add('password')
+    setInvalid(bad)
+    if (bad.size) return
+    setLoading(true)
+    try {
+      const result = await api.login(phoneUsername(phone, flag.code), password, true, undefined, false, await human.token())
+      if (!isPending(result)) onLogin(result)
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) {
+        handoff = { phone, password }
+        window.location.hash = '#/inscription'
+        return
+      }
+      setError((e as Error).message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <form
+      noValidate
+      onSubmit={(e) => {
+        e.preventDefault()
+        submit()
+      }}
+      className={cn(
+        'w-full max-w-[26rem] space-y-3 rounded-2xl border border-ink/10 bg-white p-6 text-left shadow-[0_30px_60px_-28px_rgb(11_16_36/0.3),0_8px_18px_-10px_rgb(11_16_36/0.1)] sm:p-7',
+        className,
+      )}
+    >
+      <h2 className="pb-2 font-heading text-[1.35rem] font-medium tracking-[-0.02em] text-ink">
+        Connectez votre compte <PayByPhone />
+      </h2>
+      <div className={box('phone')}>
+        <span className="flex h-full shrink-0 items-center border-r border-ink/10 pr-3 pl-4" title="Numéro français">
+          <span className="sr-only">France</span>
+          <Flag flag={flag.flag} />
+        </span>
+        <span className="pl-3 text-lg text-ink/45 tabular-nums">+{flag.code}</span>
+        <input
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel-national"
+          placeholder="Numéro de téléphone"
+          value={phone}
+          onChange={(e) => (setPhone(e.target.value), fixed('phone'))}
+          aria-label="Numéro de téléphone PayByPhone"
+          aria-invalid={invalid.has('phone') || undefined}
+          className="h-full w-0 min-w-0 flex-1 bg-transparent px-2 text-lg text-ink tabular-nums outline-none placeholder:text-ink/30"
+        />
+      </div>
+      <div className={box('password')}>
+        <input
+          type={showPassword ? 'text' : 'password'}
+          autoComplete="current-password"
+          placeholder="Mot de passe"
+          value={password}
+          onChange={(e) => (setPassword(e.target.value), fixed('password'))}
+          aria-label="Mot de passe PayByPhone"
+          aria-invalid={invalid.has('password') || undefined}
+          className="h-full min-w-0 flex-1 bg-transparent px-4 text-lg text-ink outline-none placeholder:text-ink/30"
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword((v) => !v)}
+          aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+          aria-pressed={showPassword}
+          className="mr-1.5 grid size-11 shrink-0 place-items-center rounded-[10px] text-ink/45 transition hover:text-ink"
+        >
+          {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+        </button>
+      </div>
+      {(error || human.failed) && <Notice>{withPayByPhone(error ?? human.failed ?? '')}</Notice>}
+      <button
+        type="submit"
+        disabled={loading}
+        className={cn(
+          ui.primary,
+          'h-14 w-full rounded-xl border-0 bg-[linear-gradient(90deg,var(--eu)_0%,#2a66d1_100%)] text-lg text-white shadow-[0_14px_30px_-12px_var(--eu)] hover:bg-transparent hover:brightness-110 disabled:opacity-70',
+        )}
+      >
+        {loading ? <Loader2 className="size-5 animate-spin" /> : <>Continuer <ArrowRight className="size-5" /></>}
+      </button>
+      <p className="text-center text-sm leading-relaxed text-ink/60">
+        1 mois gratuit, sans engagement. En continuant, vous acceptez les{' '}
+        <a href="#/cgu" target="_blank" rel="noopener" className="underline decoration-ink/30 underline-offset-[3px] hover:decoration-ink">
+          conditions
+        </a>
+        .
+      </p>
+    </form>
   )
 }
