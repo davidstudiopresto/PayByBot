@@ -103,7 +103,7 @@ test('sans voiture résidente ni ticket : pas de carte « Non couvert », le bou
   await expect(page.getByText('Non couvert')).toHaveCount(0)
   await expect(page.getByText('Votre stationnement n\'est pas encore automatisé.')).toHaveCount(0)
   await wizardButton(page).click()
-  await expect(page.getByText(/Étape 1 sur/)).toBeVisible()
+  await expect(page.getByText(/Étape 1\//)).toBeVisible()
 })
 
 /** The demo account with one resident ticket running on AB-123-CD, and only the cars kept by `keep`. */
@@ -126,7 +126,7 @@ test('tableau de bord : « Automatiser » d’un autre véhicule ouvre l’assis
   await demo(page)
   await expect(page.getByRole('button', { name: 'Renouveler un autre véhicule' })).toHaveCount(0)
   await wizardButton(page).click()
-  await expect(page.getByRole('dialog').getByText(/Étape 1 sur/)).toBeVisible()
+  await expect(page.getByRole('dialog').getByText(/Étape 1\//)).toBeVisible()
 })
 
 test('un seul véhicule, résident et déjà renouvelé : aucun bouton qui mène à une impasse', async ({ page }) => {
@@ -336,7 +336,7 @@ test('programmer un ticket : une voiture résidente mène au renouvellement de l
   await expect(page.getByText('Renouveler chaque semaine')).toBeVisible()
   await expect(page.getByText('Type de véhicule')).toBeHidden()
   await page.getByRole('button', { name: 'Précédent' }).click() // back to the vehicle, still the one chosen
-  await expect(page.getByText(/Étape 1 sur 5/)).toBeVisible()
+  await expect(page.getByText(/Étape 1\/5/)).toBeVisible()
   await expect(page.getByRole('button', { name: /AB-123-CD/ })).toHaveAttribute('aria-pressed', 'true')
 })
 
@@ -818,7 +818,7 @@ test('bienvenue : un véhicule non résident choisi mène à l’assistant de ti
   await page.getByRole('radio', { name: /LM-?789/ }).click()
   await page.getByRole('button', { name: /^Commencer mon essai gratuit/ }).click()
   const wizard = page.getByRole('dialog')
-  await expect(wizard.getByText(/Étape 1 sur/)).toBeVisible()
+  await expect(wizard.getByText(/Étape 1\//)).toBeVisible()
   await expect(wizard.getByRole('button', { name: /LM-789-NP/ })).toHaveAttribute('aria-pressed', 'true')
 })
 
@@ -828,7 +828,7 @@ test('bienvenue, aucun véhicule résident : « C’est bien moi, continuer » m
   await page.goto(LINK + '#/bienvenue')
   await expect(page.getByRole('button', { name: /^Activer le renouvellement/ })).toHaveCount(0)
   await page.getByRole('button', { name: /^Commencer mon essai gratuit/ }).click()
-  await expect(page.getByRole('dialog').getByText(/Étape 1 sur/)).toBeVisible()
+  await expect(page.getByRole('dialog').getByText(/Étape 1\//)).toBeVisible()
 })
 
 test('bienvenue après un compte supprimé, mois offert en cours : « Continuer mon essai gratuit »', async ({ page }) => {
@@ -859,7 +859,7 @@ test('retour de paiement, mois offert épuisé : l’assistant s’ouvre sur le 
   await page.evaluate(() => { window.location.hash = '#session_id=cs_test' })
   await page.reload()
   const wizard = page.getByRole('dialog')
-  await expect(wizard.getByText(/Étape 1 sur/)).toBeVisible()
+  await expect(wizard.getByText(/Étape 1\//)).toBeVisible()
   await expect(wizard.getByRole('button', { name: /LM-789-NP/ })).toHaveAttribute('aria-pressed', 'true')
 })
 

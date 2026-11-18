@@ -1038,11 +1038,12 @@ export function DailyWizard({
       <DialogContent className={ui.dialog} showCloseButton={!locked}>
         <div className="px-6 pt-6">
           <p className="text-sm font-medium tracking-wide text-ink/45 uppercase">
-            Étape {shown} sur {labels.length} · {labels[shown - 1]}
+            <span className="sr-only">Étape </span>{shown}/{labels.length} · {labels[shown - 1]}
           </p>
           <DialogTitle className={cn(ui.dialogTitle, 'mt-1')}>{editing ? 'Modifier le ticket' : initialTicket ? 'Renouveler ce ticket' : 'Programmer un ticket'}</DialogTitle>
-          {/* The sentence under the title only on the first step: the others need the height. */}
-          <DialogDescription className={cn('mt-1 text-ink/60', step > 1 && 'sr-only')}>
+          {/* The sentence under the title only on the first step (the others need the height), and never for a new
+              ticket: the title says it. Kept for screen readers. */}
+          <DialogDescription className={cn('mt-1 text-ink/60', (step > 1 || (!editing && !initialTicket)) && 'sr-only')}>
             {editing
               ? 'Les nouveaux réglages valent pour les prochains tickets.'
               : initialTicket ? 'Repris automatiquement chaque jour, à l’heure voulue.' : 'Pris automatiquement les jours choisis, à l’heure voulue.'}

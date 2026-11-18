@@ -217,7 +217,7 @@ export function PayWizard({
 
       <main key={step} className="rise mx-auto w-full max-w-2xl flex-1 px-5 pt-10 pb-36">
         <p className="text-sm text-ink/60">
-          Étape {step + 1} sur {STEPS.length}
+          <span className="sr-only">Étape </span>{step + 1}/{STEPS.length}
         </p>
 
         {step === 0 && (
