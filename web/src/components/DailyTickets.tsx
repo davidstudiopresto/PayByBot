@@ -278,7 +278,7 @@ function DailyCard({ ap, data, onChanged, needsOffer }: { ap: Autopilot; data: O
     <article className={cn('rise overflow-hidden rounded-2xl border border-ink/10 bg-white', finished && 'opacity-80')}>
       {/* The same header as the running-ticket card: the plate, then the kind of ticket and its zone in one pill. */}
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 py-4">
-        {/* The car icon before the plate, as in « Vos autres véhicules ». */}
+        {/* The car icon before the plate, as in « Autres véhicules ». */}
         <span className="flex shrink-0 items-center gap-3">
           {/* From a tablet only: on a phone, the plate and the zone would no longer fit on one line. */}
           <span className="hidden size-10 shrink-0 place-items-center rounded-full bg-ink/[0.06] text-ink/60 sm:grid" aria-hidden>

@@ -689,7 +689,7 @@ test('carte bancaire qui expire ce mois-ci : bannière rouge, partie avec une ca
   await expect(page.getByRole('alert').filter({ hasText: 'expire ce mois-ci' })).toBeVisible()
   validUntil = later // renewed in PayByPhone: the next refresh drops the banner
   await page.reload()
-  await expect(page.getByText(/Vos véhicules|Vos autres véhicules|Votre ticket en cours|Vos tickets en cours/).first()).toBeVisible() // the page is there
+  await expect(page.getByText(/^(Véhicules|Autres véhicules|Tickets? en cours)$/).first()).toBeVisible() // the page is there
   await expect(page.getByRole('alert').filter({ hasText: 'expire ce mois-ci' })).toHaveCount(0)
 })
 

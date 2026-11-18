@@ -118,7 +118,7 @@ function Ticket({
     <article data-renewal-card className="rise overflow-hidden rounded-2xl border border-ink/10 bg-white">
       {/* The car and where: the plate on the left, the zone on the right, on one line. */}
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 py-4">
-        {/* The car icon before the plate, as in « Vos autres véhicules ». */}
+        {/* The car icon before the plate, as in « Autres véhicules ». */}
         <span className="flex shrink-0 items-center gap-3">
           {/* From a tablet only: on a phone, the plate and the zone would no longer fit on one line. */}
           <span className="hidden size-10 shrink-0 place-items-center rounded-full bg-ink/[0.06] text-ink/60 sm:grid" aria-hidden>
@@ -621,10 +621,10 @@ export function Dashboard({
           {!data
             ? withPayByPhone('Chargement de votre compte PayByPhone.')
             : running.length
-              ? // One card: « Votre ticket en cours », several (running or programmed): « Vos tickets ».
+              ? // One card: « Ticket en cours », several (running or programmed): « Tickets en cours ».
                 sessions.length + shownDaily > 1
-                ? 'Vos tickets en cours'
-                : 'Votre ticket en cours'
+                ? 'Tickets en cours'
+                : 'Ticket en cours'
               : nextPlanned
                 ? `Aucun ticket en cours : le prochain est prévu ${whenAt(nextPlanned)}.`
                 : "Aucun véhicule n'est couvert en ce moment."}
@@ -716,7 +716,7 @@ export function Dashboard({
             )}
             residents={residentPlates}
             onProgram={(plate) => (setBackPlate(plate), setProgramAsked((n) => n + 1))}
-            title={running.length || data.autopilots.some((ap) => ap.enabled && !ruleState(ap).finished) ? 'Vos autres véhicules' : 'Vos véhicules'}
+            title={running.length || data.autopilots.some((ap) => ap.enabled && !ruleState(ap).finished) ? 'Autres véhicules' : 'Véhicules'}
           />
         )}
         {data && residentFor && (
