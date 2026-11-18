@@ -225,5 +225,44 @@ class ScheduleHandi(unittest.TestCase):
         self.assertIn("schedule_handi_ticket", connector.HANDLERS)
 
 
+
+class ScheduleTicket(unittest.TestCase):
+    """« Programmer un ticket » visiteur from Claude: the wizard's own choices (rate by weight, Paris 6 h at most,
+    Sundays free), then the site's route."""
+    RATES = [{"name": "Résident - 75001", "type": "Resident", "ratePolicyId": 1, "acceptedTimeUnits": ["Days"]},
+             {"name": "Visiteur - Véhicule léger", "type": "Visitor", "ratePolicyId": 2, "acceptedTimeUnits": ["Hours", "Minutes"]},
+             {"name": "Visiteur - Véhicule lourd", "type": "Visitor", "ratePolicyId": 3, "acceptedTimeUnits": ["Hours", "Minutes"]}]
+
+    def schedule(self, **args):
+        os.environ["PAYBYBOT_SECRET"] = "t"
+        s = MagicMock()
+        s.call.side_effect = lambda method, *a, **k: [{"licensePlate": "AB-123-CD"}] if method == "get_vehicles" else \
+            {"paymentCards": [{"paymentAccountId": "card1", "cardType": "Visa", "maskedCardNumber": "4242"}]}
+        added = []
+        with patch.object(web, "current", return_value=s), patch.object(web, "rates", return_value=self.RATES), \
+                patch.object(web, "quote", return_value={"cost": {"amount": 3.2, "currency": "EUR"}}), \
+                patch.object(web, "add_autopilot", side_effect=lambda body, token: added.append(body) or {"id": "r1", "plate": body.plate}):
+            out = connector.schedule_ticket("tok", {"plate": "ab123cd", "zone": "75012", "start": "09:00", **args})
+        return out, added[0] if added else None
+
+    def test_light_by_default_six_hours_in_paris_without_sunday(self):
+        out, body = self.schedule(days=[0, 2, 6])
+        self.assertEqual((body.rate, body.unit, body.duration, body.days, body.start, body.label),
+                         ("2", "Hours", 6, [0, 2], "09:00", "Jours précis"))
+        self.assertEqual(out["prix_par_ticket"]["amount"], 3.2)
+
+    def test_heavy_and_a_period(self):
+        _, body = self.schedule(kind="heavy", date_from="2026-12-01", date_to="2026-12-03", duration_hours=2)
+        self.assertEqual((body.rate, body.duration, body.dateFrom, body.dateTo, body.days),
+                         ("3", 2, "2026-12-01", "2026-12-03", list(range(7))))
+
+    def test_no_day_nothing_programmed(self):
+        with self.assertRaises(HTTPException):
+            self.schedule(days=[6])
+
+    def test_a_vehicle_not_on_the_account(self):
+        with self.assertRaises(HTTPException):
+            self.schedule(plate="ZZ999ZZ", days=[0])
+
 if __name__ == "__main__":
     unittest.main()

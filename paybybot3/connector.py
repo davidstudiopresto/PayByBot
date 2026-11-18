@@ -11,6 +11,7 @@ the dashboard (own vehicles, subscription, no ticket paid twice).
 import base64
 import hashlib
 import json
+import re
 import secrets
 import time
 from datetime import datetime, timezone
@@ -297,6 +298,26 @@ TOOLS = [
                                                          "carte CMI-S."}},
          ["plate", "zones", "cmis_card"]),
      "annotations": {"readOnlyHint": False, "destructiveHint": False, "openWorldHint": True}},
+    {"name": "schedule_ticket", "title": "Programmer un ticket",
+     "description": "Programme un ticket PayByPhone visiteur (véhicule léger ou lourd), pris automatiquement par "
+                    "PayByBot certains jours de la semaine, ou chaque jour d'une période, à l'heure choisie (heure de "
+                    "Paris). Payé par PayByPhone avec la carte enregistrée. Pour la carte mobilité CMI-S : "
+                    "schedule_handi_ticket. Récapituler à l'utilisateur (prix compris) et lui demander confirmation avant.",
+     "inputSchema": obj({
+         "plate": {"type": "string", "description": "La plaque du véhicule, telle que dans get_account."},
+         "kind": {"type": "string", "enum": ["light", "heavy"],
+                  "description": "light : véhicule léger (moins de 1,6 t, 2 t électrique) ; heavy : véhicule lourd."},
+         "zone": {"type": "string", "description": "Le numéro de zone PayByPhone (à Paris : 75001 à 75020, ou 75116)."},
+         "days": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 6}, "minItems": 1, "maxItems": 7,
+                  "description": "Les jours de la semaine : 0 = lundi … 5 = samedi, 6 = dimanche (gratuit à Paris, "
+                                 "ignoré). Sans date_from."},
+         "date_from": DAY, "date_to": DAY,
+         "start": {"type": "string", "pattern": r"^([01]\d|2[0-3]):[0-5]\d$",
+                   "description": "L'heure de prise du ticket, HH:MM (heure de Paris)."},
+         "duration_hours": {"type": "number", "exclusiveMinimum": 0, "maximum": 24,
+                            "description": "Durée du ticket en heures (à Paris 6 h au plus ; par défaut le maximum)."},
+     }, ["plate", "zone", "start"]),
+     "annotations": {"readOnlyHint": False, "destructiveHint": False, "openWorldHint": True}},
     {"name": "pause_renewal", "title": "Mettre en pause",
      "description": "Met en pause un renouvellement ou un ticket programmé : aucun ticket n'est pris du premier au "
                     "dernier jour inclus (sans dernier jour : jusqu'à la reprise).",
@@ -398,6 +419,63 @@ def schedule_handi_ticket(token, args):
     return out
 
 
+
+
+def pick_rate(found, kind):
+    """The visitor rate the wizard would take: light or heavy when PayByPhone sells both, else the only one."""
+    def text(r):
+        return "%s %s" % (r.get("name"), r.get("type"))
+    visitors = [r for r in found or [] if not r.get("parkingNotAllowedReason")
+                and not re.search(r"r[ée]sident|handi", text(r), re.I)]
+    if not visitors:
+        raise HTTPException(400, "PayByPhone ne vend aucun ticket visiteur pour ce véhicule dans cette zone. "
+                                 "Vérifiez le numéro sur le panneau ou l'horodateur.")
+    weighed = [r for r in visitors if re.search(r"lourd" if kind == "heavy" else r"l[ée]ger", r.get("name") or "", re.I)]
+    return (weighed or visitors)[0]
+
+
+def schedule_ticket(token, args):
+    """As « Programmer un ticket » → véhicule léger / lourd on the dashboard: a visitor ticket on chosen days."""
+    s = web.current(token)
+    zone = str(args.get("zone") or "").strip()
+    paris = bool(web.PARIS_ZONE.match(zone))
+    vehicle = next((v for v in web.guarded(lambda: s.call("get_vehicles")) or []
+                    if web.plate_key(v.get("licensePlate") or "") == web.plate_key(args.get("plate") or "")
+                    and not v.get("archived")), None)
+    if not vehicle:
+        raise HTTPException(400, "Ce véhicule n'est pas sur votre compte PayByPhone.")
+    plate = vehicle["licensePlate"]
+    rate = pick_rate(web.rates(zone, plate, token), args.get("kind") or "light")
+    units = [u for u in rate.get("acceptedTimeUnits") or [] if u != "Days"]
+    most = 6 if paris else 24
+    hours = min(float(args.get("duration_hours") or most), most)
+    if "Hours" in units and hours == int(hours):
+        unit, duration = "Hours", int(hours)
+    elif "Minutes" in units:
+        unit, duration = "Minutes", int(round(hours * 60))
+    else:
+        raise HTTPException(400, "Ce tarif ne se prend pas à l'heure : programmez-le depuis le site.")
+    period = args.get("date_from") or args.get("date_to")
+    days = list(range(7)) if period else sorted(set(args.get("days") or []))
+    if paris and not period:
+        days = [d for d in days if d != 6]  # Sundays are free in Paris
+    if not days:
+        raise HTTPException(400, "Donnez des jours de la semaine (lundi à samedi) ou une date.")
+    cards = [p for p in web.normalize_accounts(web.guarded(lambda: s.call("get_payment_accounts")) or {})
+             if p.get("kind") == "card" and not p.get("expired")]
+    if not cards:
+        raise HTTPException(400, "Aucune carte bancaire valide dans PayByPhone : ajoutez-en une dans l'application.")
+    parking = dict(location=zone, rate=str(rate["ratePolicyId"]), duration=duration, unit=unit, plate=plate,
+                   paymentAccountId=cards[0]["id"])
+    cost = (web.quote(web.QuoteRequest(**parking), token) or {}).get("cost")
+    body = web.Autopilot(**parking, label=DAILY_LABEL, days=days, start=args["start"], tz="Europe/Paris",
+                         **({"dateFrom": args.get("date_from") or args.get("date_to"),
+                             "dateTo": args.get("date_to") or args.get("date_from")} if period else {}))
+    ap = web.add_autopilot(body, token)
+    return {"ok": True, "programme": renewal_view(ap) if isinstance(ap, dict) else None, "tarif": rate.get("name"),
+            "duree": "%d %s" % (duration, "h" if unit == "Hours" else "min"), "prix_par_ticket": cost}
+
+
 def pause_renewal(token, args):
     return renewal_view(web.pause_autopilot(args["renewal_id"], web.Pause(start=args["start"], end=args.get("end")), token))
 
@@ -413,11 +491,12 @@ def stop_renewal(token, args):
 
 
 HANDLERS = {"get_account": get_account, "get_history": get_history, "activate_renewal": activate_renewal,
+            "schedule_ticket": schedule_ticket,
             "schedule_handi_ticket": schedule_handi_ticket, "pause_renewal": pause_renewal, "resume_renewal": resume_renewal, "stop_renewal": stop_renewal}
 
 INSTRUCTIONS = ("PayByBot renouvelle automatiquement les tickets de stationnement PayByPhone (ticket résident chaque "
                 "semaine, tickets programmés certains jours). Commencez par get_account. Les tickets sont payés par "
-                "PayByPhone avec la carte de l'utilisateur : confirmez avec lui avant activate_renewal ou stop_renewal.")
+                "PayByPhone avec la carte de l'utilisateur : confirmez avec lui avant activate_renewal, schedule_ticket ou stop_renewal.")
 
 
 def call_tool(state, name, args):
