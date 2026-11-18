@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { ArrowRight, Car, CreditCard, Loader2, Mail, MapPin, Phone, type LucideIcon } from 'lucide-react'
+import { ArrowRight, Car, CreditCard, Loader2, LogOut, Mail, MapPin, Phone, RefreshCw, type LucideIcon } from 'lucide-react'
 import { RemotePanel } from '@/components/RemoteScene'
 import { PayByPhone, Plate, withPayByPhone, Wordmark } from '@/components/signs'
 import { api, type Me, type Overview, type PricedVehicle } from '@/lib/api'
@@ -15,6 +15,8 @@ function phoneText(username: string) {
   const m = username.match(/^\+33(\d)(\d{2})(\d{2})(\d{2})(\d{2})$/)
   return m ? `+33 ${m.slice(1).join(' ')}` : username
 }
+
+const iconButton = 'inline-flex size-10 items-center justify-center rounded-full transition hover:bg-ink/[0.06] hover:text-ink disabled:opacity-60'
 
 /** One line of the welcome page: the label on the left, the value on the right. */
 function Line({ label, icon: Icon, children }: { label: string; /** In place of the label, as on « Mon compte » (kept for screen readers). */ icon: LucideIcon; children: ReactNode }) {
@@ -150,15 +152,16 @@ export function Welcome({
         {/* The top bar: the wordmark, and on the right reading PayByPhone again or signing out (kept out of the way). */}
         <div className="flex items-center justify-between gap-4">
           <Wordmark />
-          <p className="flex items-center gap-x-5 text-sm text-ink/60">
+          {/* Two icons (named for screen readers and on hover): reading PayByPhone again, signing out. */}
+          <p className="flex items-center gap-x-1 text-ink/60">
             {!noCard && (
-              <button onClick={refresh} disabled={refreshing} className={cn('inline-flex items-center gap-1.5', ui.link)}>
-                {refreshing && <Loader2 className="size-3.5 animate-spin" />} Rafraîchir
+              <button onClick={refresh} disabled={refreshing} aria-label="Rafraîchir" title="Rafraîchir" className={iconButton}>
+                <RefreshCw className={cn('size-5', refreshing && 'animate-spin')} strokeWidth={1.75} />
               </button>
             )}
             {onLogout && (
-              <button onClick={onLogout} className={ui.link}>
-                Se déconnecter
+              <button onClick={onLogout} aria-label="Se déconnecter" title="Se déconnecter" className={iconButton}>
+                <LogOut className="size-5" strokeWidth={1.75} />
               </button>
             )}
           </p>
