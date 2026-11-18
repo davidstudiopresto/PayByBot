@@ -728,6 +728,17 @@ export function HeroLogin({ onLogin, className }: { onLogin: (me: Me) => void; c
           {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
         </button>
       </div>
+      {/* The password is PayByPhone's: its own reset page (the app on Android). */}
+      <div className="flex justify-end">
+        <a
+          href={PASSWORD_RESET_LINK}
+          target={IS_ANDROID ? undefined : '_blank'}
+          rel="noopener noreferrer"
+          className="text-[0.95rem] text-ink underline decoration-ink/30 underline-offset-[3px] hover:decoration-ink"
+        >
+          Mot de passe oublié ?
+        </a>
+      </div>
       {(error || human.failed) && <Notice>{withPayByPhone(error ?? human.failed ?? '')}</Notice>}
       {/* Cloudflare's check needs its (invisible) box in the page, else its token never comes and the button spins. */}
       {human.enabled && <div ref={human.box} className="h-0 overflow-hidden" />}
