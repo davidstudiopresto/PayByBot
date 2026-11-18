@@ -649,6 +649,19 @@ function CodeStep({
   )
 }
 
+/** The smallest phones (360 px wide or less): short placeholders, so none is cut. */
+function useNarrow() {
+  const query = '(max-width: 360px)'
+  const [narrow, setNarrow] = useState(() => typeof window !== 'undefined' && window.matchMedia(query).matches)
+  useEffect(() => {
+    const list = window.matchMedia(query)
+    const update = () => setNarrow(list.matches)
+    list.addEventListener('change', update)
+    return () => list.removeEventListener('change', update)
+  }, [])
+  return narrow
+}
+
 /** The home page's form: number and password, then signed in, or on to the sign-up (number and password kept) when
  *  this PayByPhone account has no PayByBot account yet. Phone only: the e-mail login stays on « Se connecter ». */
 export function HeroLogin({ onLogin, className }: { onLogin: (me: Me) => void; className?: string }) {
@@ -656,6 +669,7 @@ export function HeroLogin({ onLogin, className }: { onLogin: (me: Me) => void; c
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(false)
+  const narrow = useNarrow()
   const [invalid, setInvalid] = useState<Set<Field>>(new Set())
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -722,7 +736,7 @@ export function HeroLogin({ onLogin, className }: { onLogin: (me: Me) => void; c
           type="tel"
           inputMode="tel"
           autoComplete="tel-national"
-          placeholder="Numéro de téléphone"
+          placeholder={narrow ? 'Numéro' : 'Numéro de téléphone'}
           value={phone}
           onChange={(e) => (setPhone(e.target.value), fixed('phone'))}
           aria-label="Numéro de téléphone PayByPhone"
@@ -734,7 +748,7 @@ export function HeroLogin({ onLogin, className }: { onLogin: (me: Me) => void; c
         <input
           type={showPassword ? 'text' : 'password'}
           autoComplete="current-password"
-          placeholder="Mot de passe PayByPhone"
+          placeholder={narrow ? 'Mot de passe' : 'Mot de passe PayByPhone'}
           value={password}
           onChange={(e) => (setPassword(e.target.value), fixed('password'))}
           aria-label="Mot de passe PayByPhone"
