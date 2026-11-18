@@ -262,7 +262,7 @@ export function LoginView({
           >
             {title ?? (signup ? <>Inscrivez-vous avec vos <span className="sm:whitespace-nowrap">identifiants <PayByPhone /></span></> : <>Connexion à <PayByBot /></>)}
           </h1>
-          {handed && (
+          {handed && signup && (
             <p className="mt-3 text-[1.05rem] leading-relaxed text-ink/60">Pas encore de compte <PayByBot /> : ajoutez votre e-mail pour le créer.</p>
           )}
           {/* Sign-up: the title says it all, no line under it. */}

@@ -1945,10 +1945,17 @@ def has_account(s):
     """Signed up already: an account with its e-mail (or paid), or renewals stored before accounts existed. An account
     saved without an e-mail (background reads for an admin, who may log in unsigned) is not a sign-up: the sign-up
     completes it."""
+    if HOSTED and not s.demo:
+        return signed_up(owner_id(s.username))
     account = load_account(s)
-    if account.get("email") or account.get("stripe_subscription"):
-        return True
-    return bool(HOSTED and not s.demo and store("renewal_list", p_owner=owner_id(s.username)))
+    return bool(account.get("email") or account.get("stripe_subscription"))
+
+
+def signed_up(owner):
+    """The one rule, for sign-in and for the sign-up page's check: an e-mail, a subscription or a renewal."""
+    data = store("account_get", p_owner=owner)
+    account = json.loads(_fernet("account").decrypt(data.encode())) if data else {}
+    return bool(account.get("email") or account.get("stripe_subscription") or store("renewal_list", p_owner=owner))
 
 
 def account_by_owner(owner):
@@ -2946,8 +2953,7 @@ def signup_check(body: SignupCheck, request: Request):
 
     def exists():
         for candidate in login_candidates(body.username)[:3]:
-            owner = owner_id(candidate)
-            if store("account_get", p_owner=owner) or store("renewal_list", p_owner=owner):
+            if signed_up(owner_id(candidate)):
                 return True
         return False
 
