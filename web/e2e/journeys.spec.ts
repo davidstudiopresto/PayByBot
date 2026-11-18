@@ -493,12 +493,12 @@ test('programmer un ticket : une heure déjà passée est refusée', async ({ pa
   if (yesterday.getMonth() === today.getMonth()) await expect(page.getByRole('button', { name: label(yesterday), exact: true })).toBeDisabled()
   await page.getByRole('button', { name: label(today), exact: true }).click()
   const parisHour = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', hour: '2-digit', hourCycle: 'h23' }).format(new Date()))
-  const nextHour = `${String((parisHour + 1) % 24).padStart(2, '0')}:00`
-  await expect.poll(() => timeShown(page)).toBe(nextHour) // by default, the hour after this one
+  const nextHour = new RegExp(`^0?${(parisHour + 1) % 24}:00$`) // the field shows 9:00, not 09:00
+  await expect.poll(() => timeShown(page)).toMatch(nextHour) // by default, the hour after this one
   await setTime(page, '00:00')
   await expect(page.getByText('Cette heure est déjà passée')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Suivant', exact: true })).toBeDisabled()
-  if (parisHour < 23) await expect.poll(() => timeShown(page)).toBe(nextHour) // put right after a moment
+  if (parisHour < 23) await expect.poll(() => timeShown(page)).toMatch(nextHour) // put right after a moment
   await setTime(page, '23:59')
   await expect(page.getByText('Cette heure est déjà passée')).toBeHidden()
   await expect(page.getByRole('button', { name: 'Suivant', exact: true })).toBeEnabled()

@@ -111,7 +111,12 @@ function Ticket({
     <article data-renewal-card className="rise overflow-hidden rounded-2xl border border-ink/10 bg-white">
       {/* The car and where: the plate on the left, the zone on the right, on one line. */}
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 py-4">
-        <span className="flex shrink-0">
+        {/* The car icon before the plate, as in « Vos autres véhicules ». */}
+        <span className="flex shrink-0 items-center gap-3">
+          {/* From a tablet only: on a phone, the plate and the zone would no longer fit on one line. */}
+          <span className="hidden size-10 shrink-0 place-items-center rounded-full bg-ink/[0.06] text-ink/60 sm:grid" aria-hidden>
+            <Car className="size-5" strokeWidth={1.75} />
+          </span>
           <Plate plate={session.plate} size="sm" />
         </span>
         <ZoneTag zone={place ?? session.location} resident={!daily} kind={session.kind} />
@@ -120,7 +125,7 @@ function Ticket({
       {/* The ticket: when it ends (renewal on) or the time left, large, with the end beside it. */}
       <div className="border-t border-ink/[0.06] px-5 py-4">
         {/* One line: until when (the time left would say it twice); in red in its last 15 minutes. */}
-        <CoveredLine key={celebrate} end={end} start={new Date(session.start).getTime()} soon={soon} />
+        <CoveredLine key={celebrate} end={end} soon={soon} />
         {renewing && (
           <DailyWizard
             data={data}
@@ -260,7 +265,7 @@ function IdleVehicles({ data, onChanged, hosted, demo, autoPlate, locked, onLogo
   const automate = 'grid size-8 shrink-0 place-items-center rounded-lg bg-ink/[0.06] text-ink transition hover:bg-ink/[0.1]'
   const arrow = <Plus className="size-4" aria-hidden />
   const row = (v: Overview['vehicles'][number], button: ReactNode) => (
-    <li key={v.plate} className="flex items-center gap-3 px-4 py-3">
+    <li key={v.plate} className="flex items-center gap-3 px-5 py-3">
       <span className="grid size-10 shrink-0 place-items-center rounded-full bg-ink/[0.06] text-ink/60" aria-hidden>
         <Car className="size-5" strokeWidth={1.75} />
       </span>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Loader2, Pencil, RotateCw } from 'lucide-react'
+import { Car, Check, Loader2, Pencil, RotateCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { NoPayment } from '@/components/NoPayment'
@@ -278,7 +278,12 @@ function DailyCard({ ap, data, onChanged, needsOffer }: { ap: Autopilot; data: O
     <article className={cn('rise overflow-hidden rounded-2xl border border-ink/10 bg-white', finished && 'opacity-80')}>
       {/* The same header as the running-ticket card: the plate, then the kind of ticket and its zone in one pill. */}
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 py-4">
-        <span className="flex shrink-0">
+        {/* The car icon before the plate, as in « Vos autres véhicules ». */}
+        <span className="flex shrink-0 items-center gap-3">
+          {/* From a tablet only: on a phone, the plate and the zone would no longer fit on one line. */}
+          <span className="hidden size-10 shrink-0 place-items-center rounded-full bg-ink/[0.06] text-ink/60 sm:grid" aria-hidden>
+            <Car className="size-5" strokeWidth={1.75} />
+          </span>
           <Plate plate={ap.plate} size="sm" />
         </span>
         <ZoneTag zone={zoneOf(ap)} resident={false} kind={ap.cmis ? 'Carte mobilité CMI-S' : 'Non-résident'} />

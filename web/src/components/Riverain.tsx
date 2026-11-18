@@ -327,16 +327,17 @@ export function RenewalActions({
       <div className={cn('space-y-3', className)}>
         <div className="flex items-center justify-between gap-4">
             <span className="min-w-0">
-              <span className="block text-[1.05rem] font-medium text-ink">{switchLabel}</span>
+              <span className="block text-[1.05rem] font-medium text-ink min-[360px]:whitespace-nowrap">{switchLabel}</span>
               {detail}
             </span>
             {/* The pause on the switch's line (one line less on the card). */}
             <span className="ml-auto" />
             {aside}
             {withPause && !later && !paused && (
-              <button onClick={() => setPausing(true)} className="inline-flex shrink-0 items-center gap-1.5 text-sm whitespace-nowrap text-ink/60 transition hover:text-ink">
+              <button onClick={() => setPausing(true)} aria-label="Pause" className="inline-flex shrink-0 items-center gap-1.5 text-sm whitespace-nowrap text-ink/60 transition hover:text-ink">
                 <Pause className="size-3.5" />
-                Pause
+                {/* The word from a tablet only: on a phone, the title stays on one line. */}
+                <span className="hidden sm:inline">Pause</span>
               </button>
             )}
             <ToggleSwitch checked={!slide.leaving} label={switchLabel} disabled={busy} busy={busy} onPress={slide.ask} />
@@ -621,15 +622,13 @@ function TimeLeft({ ms }: { ms: number }) {
   )
 }
 
-export function CoveredLine({ end, start, soon = false }: { end: number; /** The ticket's start: a bar shows how much is left. */ start?: number; soon?: boolean }) {
+export function CoveredLine({ end, soon = false }: { end: number; soon?: boolean }) {
   // Counted down once a minute.
   const [now, setNow] = useState(Date.now)
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 30_000)
     return () => clearInterval(id)
   }, [])
-  // What is left of the ticket, for its bar (as a ride's progress): from full at its start to empty at its end.
-  const left = start !== undefined && end > start ? Math.min(1, Math.max(0, (end - now) / (end - start))) : null
   // Like the card's other rows: the status left, the time left right under its label (the exact end on hover).
   return (
     <div>
@@ -641,14 +640,6 @@ export function CoveredLine({ end, start, soon = false }: { end: number; /** The
       </span>
       <span className={cn('block text-sm', soon ? 'text-destructive' : 'text-ink/60')}>Expire {expiresWhen(end, now)}</span>
     </div>
-    {left !== null && (
-      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-ink/[0.06]" aria-hidden>
-        <div
-          className={cn('ticket-bar h-full rounded-full transition-[width] duration-700', soon ? 'bg-destructive' : 'bg-[#1a9a4a]')}
-          style={{ width: `${Math.max(left * 100, 2)}%` }}
-        />
-      </div>
-    )}
     </div>
   )
 }
@@ -685,7 +676,7 @@ export function nextRenewal(nextCheck: string | null | undefined, expire: string
 function SwitchLabel({ children, status }: { on: boolean; children?: ReactNode; status?: ReactNode }) {
   return (
     <span className="min-w-0">
-      <span className="block text-[1.05rem] font-medium text-ink">Renouvellement auto</span>
+      <span className="block text-[1.05rem] font-medium text-ink min-[360px]:whitespace-nowrap">Renouvellement auto</span>
       {/* The switch says on or off: only a line of its own (the next renewal) when the card gives one. */}
       {(status || children) && (
         <span className="flex items-center gap-3">
@@ -777,8 +768,8 @@ export function RenewalSwitch({
       <SwitchLabel on={on} status={on ? status : undefined} />
       <span className="ml-auto" />
       {pausable && (
-        <button onClick={() => setPausing(true)} className="inline-flex shrink-0 items-center gap-1.5 text-sm text-ink/60 transition hover:text-ink">
-          <Pause className="size-3.5" /> Pause
+        <button onClick={() => setPausing(true)} aria-label="Pause" className="inline-flex shrink-0 items-center gap-1.5 text-sm text-ink/60 transition hover:text-ink">
+          <Pause className="size-3.5" /> <span className="hidden sm:inline">Pause</span>
         </button>
       )}
       <ToggleSwitch checked={on && !slide.leaving} label="Renouvellement résident automatique" disabled={busy} busy={busy} onPress={onClick} />
@@ -1258,7 +1249,7 @@ export function RiverainDialog({
           </button>
           </div>
           {/* Reassurance under the action, quiet. */}
-          <p className="-mt-3 text-center text-sm text-balance text-ink/60">Payé à <PayByPhone />, au même prix. Arrêt à tout moment.</p>
+          <p className="-mt-3 text-center text-sm text-balance text-ink/60">Ticket payé directement à <PayByPhone />, au prix habituel. Vous arrêtez quand vous voulez.</p>
           {locked && onLogout && (
             <button onClick={onLogout} className={cn('mx-auto block text-sm', ui.link)}>
               Se déconnecter

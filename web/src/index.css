@@ -346,6 +346,3 @@ input:-webkit-autofill::first-line {
 @media (prefers-reduced-motion: reduce) { .renew-celebrate .switch__control { animation: none; } }
 
 /* The ticket's bar fills from nothing to what is left as the card appears (then follows the time). */
-@keyframes ticket-bar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.ticket-bar { transform-origin: left; animation: ticket-bar 0.8s ease-out 0.2s both; }
-@media (prefers-reduced-motion: reduce) { .ticket-bar { animation: none; } }
