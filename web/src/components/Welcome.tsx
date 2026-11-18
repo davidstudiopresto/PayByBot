@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { ArrowRight, Car, CreditCard, Loader2, LogOut, Mail, MapPin, Phone, RefreshCw, type LucideIcon } from 'lucide-react'
+import { ArrowRight, Car, Check, CreditCard, Loader2, LogOut, Mail, MapPin, Phone, RefreshCw, type LucideIcon } from 'lucide-react'
 import { RemotePanel } from '@/components/RemoteScene'
 import { PayByPhone, Plate, withPayByPhone, Wordmark } from '@/components/signs'
 import { api, type Me, type Overview, type PricedVehicle } from '@/lib/api'
@@ -280,7 +280,8 @@ export function Welcome({
           {offered.length > 0 && !noCard && (
             <div className="mt-6" role="radiogroup" aria-label="Stationnement à automatiser">
               <p className="mb-2 text-sm text-ink/60">{offered.length > 1 ? 'Par quelle automatisation commençons-nous ?' : 'Stationnement à automatiser :'}</p>
-              <div className="space-y-1.5">
+              {/* Light: the plates side by side, two a line; the chosen one tinted with a check, no radio circles. */}
+              <div className={cn('grid gap-2', offered.length > 1 && 'grid-cols-2')}>
                 {offered.map((v) => {
                   const on = v.plate === choice?.plate
                   return (
@@ -292,25 +293,21 @@ export function Welcome({
                       aria-label={v.plate}
                       onClick={() => setPicked(v.plate)}
                       className={cn(
-                        'flex w-full items-center gap-3 rounded-2xl border bg-white px-4 py-2.5 text-left transition',
-                        on ? 'border-eu ring-1 ring-eu' : 'border-ink/10 hover:border-ink/25',
+                        'relative flex w-full flex-col items-center justify-center gap-1 rounded-xl border px-3 py-3 text-center transition',
+                        on ? 'border-eu bg-eu/[0.05]' : 'border-transparent bg-white hover:border-ink/15',
                       )}
                     >
-                      {offered.length > 1 && (
-                        <span className={cn('grid size-5 shrink-0 place-items-center rounded-full border-2', on ? 'border-eu' : 'border-ink/25')}>
-                          {on && <span className="size-2.5 rounded-full bg-eu" />}
+                      {offered.length > 1 && on && (
+                        <span className="absolute top-1.5 right-1.5 grid size-4 place-items-center rounded-full bg-eu text-white">
+                          <Check className="size-2.5" strokeWidth={3.5} aria-hidden />
                         </span>
                       )}
                       <Plate plate={v.plate} size="sm" className="shrink-0 whitespace-nowrap" />
-                      {/* On the right: its ticket now (from PayByPhone), only when one runs. */}
-                      <span className="ml-auto flex flex-col items-end gap-1 text-right">
-                        <span className="text-sm text-ink/60">
-                          {(() => {
-                            const end = ticketEnd(v.plate)
-                            return end ? `Ticket jusqu’au ${when(end)}` : null // nothing said when no ticket runs
-                          })()}
-                        </span>
-                      </span>
+                      {/* Under it: its ticket now (from PayByPhone), only when one runs. */}
+                      {(() => {
+                        const end = ticketEnd(v.plate)
+                        return end ? <span className="text-xs text-ink/60">Ticket jusqu’au {when(end)}</span> : null
+                      })()}
                     </button>
                   )
                 })}
