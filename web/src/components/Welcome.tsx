@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { ArrowRight, Loader2 } from 'lucide-react'
+import { ArrowRight, Car, CreditCard, Loader2, Mail, MapPin, Phone, type LucideIcon } from 'lucide-react'
 import { RemotePanel } from '@/components/RemoteScene'
 import { PayByPhone, Plate, withPayByPhone, Wordmark } from '@/components/signs'
 import { api, type Me, type Overview, type PricedVehicle } from '@/lib/api'
@@ -17,10 +17,13 @@ function phoneText(username: string) {
 }
 
 /** One line of the welcome page: the label on the left, the value on the right. */
-function Line({ label, children }: { label: string; children: ReactNode }) {
+function Line({ label, icon: Icon, children }: { label: string; /** In place of the label, as on « Mon compte » (kept for screen readers). */ icon: LucideIcon; children: ReactNode }) {
   return (
     <div className="flex min-h-14 items-center justify-between gap-6 py-3 text-[1.05rem]">
-      <dt className="shrink-0 text-ink/60">{label}</dt>
+      <dt className="shrink-0">
+        <Icon className="size-[1.15rem] text-ink/45" strokeWidth={1.75} aria-hidden />
+        <span className="sr-only">{label}</span>
+      </dt>
       <dd className="min-w-0 text-right text-ink">{children}</dd>
     </div>
   )
@@ -172,11 +175,11 @@ export function Welcome({
           {/* Lines arriving with PayByPhone's answer: the block grows smoothly, never in one jump. */}
           <SmoothHeight className="mt-8">
             <dl className="divide-y divide-ink/10 border-y border-ink/10">
-              <Line label="Téléphone">
+              <Line label="Téléphone" icon={Phone}>
                 <span className="font-heading font-medium tabular-nums">{phoneText(me.username)}</span>
               </Line>
               {email !== '' && (
-                <Line label="E-mail">
+                <Line label="E-mail" icon={Mail}>
                   {email === undefined ? (
                     <LineBone className="ml-auto w-36" />
                   ) : (
@@ -185,7 +188,7 @@ export function Welcome({
                 </Line>
               )}
               {/* Every vehicle of the account, above its residence (the choice below says which one to automate). */}
-              <Line label={n > 1 ? 'Véhicules' : 'Véhicule'}>
+              <Line label={n > 1 ? 'Véhicules' : 'Véhicule'} icon={Car}>
                 {vehicles === undefined ? (
                   <PlateBone className="ml-auto" />
                 ) : vehicles.length ? (
@@ -201,7 +204,7 @@ export function Welcome({
               </Line>
               {/* Its own line: the zone(s) where PayByPhone gives the resident rate (« 75001 »). */}
               {(vehicles === undefined || zones.length > 0) && (
-                <Line label="Résidence">
+                <Line label="Résidence" icon={MapPin}>
                   {vehicles === undefined ? (
                     <LineBone className="ml-auto w-16" />
                   ) : (
@@ -216,7 +219,7 @@ export function Welcome({
                 </Line>
               )}
               {/* The card PayByPhone pays with: always shown, in red when there is none valid (the next step waits). */}
-              <Line label={cards.length > 1 ? 'Cartes' : 'Carte'}>
+              <Line label={cards.length > 1 ? 'Cartes' : 'Carte'} icon={CreditCard}>
                 {cards.length ? (
                   <span className="flex flex-col items-end gap-0.5 font-heading font-medium">
                     {cards.map((p) => (

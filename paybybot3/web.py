@@ -2902,7 +2902,7 @@ def login(body: Login, request: Request, response: Response):
     if body.signup and not demo:  # the account is created once the e-mail is confirmed with a code
         # No card saved on PayByPhone does not stop the sign-up: the account then asks for one, full screen. No
         # resident rate needed any more: non-residents take visitor or Handi tickets on chosen days.
-        zone = guarded(lambda: resident_home_zone(session))  # the resident zone when there is one, else None
+        zone = None  # looked for while the code is read (/api/signup/zone): the 20 arrondissements take seconds
         if email_taken(body.email.strip(), owner_id(session.username)):  # one e-mail per PayByBot account
             log.info("sign-up refused: e-mail already used by another account")
             raise HTTPException(400, EMAIL_TAKEN)
@@ -3013,14 +3013,10 @@ def start_verification(response, session, email, zone, pending=None, source=""):
         else:
             pending["t"] = secrets.token_urlsafe(32)
     pending.update(h=code_hash(code, pending["email"]), exp=int(time.time()) + CODE_TTL, sent=int(time.time()))
-    if HOSTED:
-        value = _fernet("pending").encrypt(json.dumps(pending).encode()).decode()
-    else:
+    if not HOSTED:
         PENDING[pending["t"]] = {**pending, "session": session, "tries": 0}
-        value = pending["t"]
     send_code(pending["email"], code)
-    response.set_cookie(PENDING_COOKIE, value, httponly=True, samesite="strict", secure=HOSTED, path="/api/signup",
-                        max_age=CODE_TTL)
+    keep_pending(response, pending)
     log.info("sign-up code sent")
     return {"pending": True, "email": mask_email(pending["email"])}
 
@@ -3102,6 +3098,29 @@ def verify_signup(body: CodeCheck, response: Response, pbb_pending: str = Cookie
     remember_name(session)
     record_activity("Nouvelle inscription", session, ["Origine : %s." % ORIGIN_TEXT[signup_origin(pending.get("src"))]])
     return {"username": session.username, "demo": False, "hosted": HOSTED, "firstName": first_name(session)}
+
+
+def keep_pending(response, pending):
+    """The sign-up waiting for its code: sealed in a cookie online, a token to the server's memory locally."""
+    value = _fernet("pending").encrypt(json.dumps(pending).encode()).decode() if HOSTED else pending["t"]
+    response.set_cookie(PENDING_COOKIE, value, httponly=True, samesite="strict", secure=HOSTED, path="/api/signup",
+                        max_age=CODE_TTL)
+
+
+@app.post("/api/signup/zone")
+def signup_zone(response: Response, pbb_pending: str = Cookie(None)):
+    """The resident arrondissement, looked for while the code is read (not before sending it): kept with the sign-up,
+    saved on the account at the code. Not found, or the code typed first: the account looks for it later itself."""
+    pending, session = read_pending(pbb_pending)
+    if pending.get("zone") is None:
+        try:
+            pending["zone"] = resident_home_zone(session)
+        except Exception as e:
+            log.info("zone not found at sign-up: %s", type(e).__name__)
+            return {"zone": None}
+        if HOSTED:
+            keep_pending(response, pending)
+    return {"zone": pending["zone"]}
 
 
 @app.post("/api/signup/resend")

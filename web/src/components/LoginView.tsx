@@ -202,6 +202,7 @@ export function LoginView({
       if (isPending(result)) {
         trackLinkStep('code')
         setCodeSentTo(result.email)
+        api.signupZone().catch(() => {}) // meanwhile; not found, the account looks for it later
       }
       else onLogin(result)
     } catch (e) {

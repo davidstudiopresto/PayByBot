@@ -97,6 +97,8 @@ class Account(unittest.TestCase):
         self.assertTrue(result["pending"])
         self.assertEqual(result["email"], "c•••@d.fr")
         self.assertEqual(fresh.account, {})  # nothing created before the code
+        self.assertEqual(web.signup_zone(Response(), token), {"zone": "75001"})  # looked for while the code is read
+        self.assertEqual(fresh.account, {})
         web.verify_signup(web.CodeCheck(code=code[:3] + " " + code[3:]), Response(), token)
         # The zone comes from PayByPhone (the demo offers the resident rate everywhere: the 1st), not the form.
         self.assertEqual({k: fresh.account[k] for k in ("email", "zone", "zone_found")},

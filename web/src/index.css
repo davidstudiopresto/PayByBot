@@ -177,6 +177,11 @@
 }
 .rise { animation: rise .35s ease-out both; }
 
+/* Every page arrives softly (after a loading screen, a sign-in, a page change): a fade only, no movement, so fixed
+   and sticky bars stay put. Each page is its own element under #root: it plays once, when the page changes. */
+@keyframes page-in { from { opacity: 0; } to { opacity: 1; } }
+#root > * { animation: page-in .4s ease-out both; }
+
 @keyframes blink { 50% { opacity: .35; } }
 
 /* Home: the arrow under the hero moves down a little, inviting to scroll. */
@@ -199,7 +204,7 @@
 .zone-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: zone-draw .3s .2s ease-out forwards; }
 
 @media (prefers-reduced-motion: reduce) {
-  .rise, .blink, .marquee, .zone-ring, .zone-pop, .animate-rippling { animation: none; }
+  .rise, .blink, .marquee, .zone-ring, .zone-pop, .animate-rippling, #root > * { animation: none; }
   .zone-draw { animation: none; stroke-dashoffset: 0; }
 }
 

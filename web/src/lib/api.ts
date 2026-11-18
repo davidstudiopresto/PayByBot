@@ -257,6 +257,8 @@ export const api = {
   signupCheck: (username: string) => post<{ exists: boolean }>('/api/signup/check', { username }),
   verifySignup: (code: string) => post<Me>('/api/signup/verify', { code }),
   resendSignupCode: () => post<SignupPending>('/api/signup/resend'),
+  /** The resident arrondissement, looked for while the code is read (takes seconds on PayByPhone). */
+  signupZone: () => post<{ zone: string | null }>('/api/signup/zone'),
   deleteData: () => request('/api/me/data', { method: 'DELETE' }),
   overview: () => request<Overview>('/api/overview'),
   /** The weeks already paid, from PayByPhone, newest first. */
