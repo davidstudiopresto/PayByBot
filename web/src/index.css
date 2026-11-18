@@ -252,6 +252,25 @@ input::first-line {
   font-size: inherit;
 }
 
+/* The sign-up's « J'accepte » box, drawn by us: framed in red (its own border, no square around it) when it was
+   not ticked at « Continuer ». */
+.check {
+  appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1.5px solid color-mix(in srgb, var(--ink) 35%, transparent);
+  border-radius: 5px;
+  background: #fff center / 0.85rem no-repeat;
+  cursor: pointer;
+}
+.check:checked {
+  border-color: var(--eu);
+  background-color: var(--eu);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E");
+}
+.check[aria-invalid='true'] { border-color: var(--destructive); }
+.check:focus-visible { outline: 2px solid color-mix(in srgb, var(--eu) 40%, transparent); outline-offset: 2px; }
+
 /* ShinyButton: the light sweeping from right to left, then a pause (CSS only). */
 @property --x {
   syntax: '<percentage>';

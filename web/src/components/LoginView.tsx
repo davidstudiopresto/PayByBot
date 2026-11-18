@@ -92,7 +92,7 @@ export function LoginView({
   const [signupEmail, setSignupEmail] = useState('')
   const [invalid, setInvalid] = useState<Set<Field>>(new Set())
   const fixed = (f: Field) => setInvalid((x) => (x.has(f) ? new Set([...x].filter((y) => y !== f)) : x))
-  const box = (f: Field) => cn(fieldBox, invalid.has(f) && 'border-destructive ring-3 ring-destructive/15 focus-within:border-destructive focus-within:ring-destructive/15')
+  const box = (f: Field) => cn(fieldBox, invalid.has(f) && 'border-destructive focus-within:border-destructive focus-within:ring-0')
   const [showPassword, setShowPassword] = useState(false)
   const [accepted, setAccepted] = useState(false)
   const [remember, setRemember] = useState(false)
@@ -438,7 +438,7 @@ export function LoginView({
                 required
                 aria-invalid={invalid.has('terms') || undefined}
                 // Not ticked when « Continuer » was pressed: framed in red, like a missing field.
-                className={cn('mt-0.5 size-5 shrink-0 accent-[var(--eu)]', invalid.has('terms') && 'rounded-[4px] outline-2 outline-offset-1 outline-destructive')}
+                className="check mt-0.5 shrink-0"
               />
               <span>
                 J'accepte les{' '}
@@ -648,7 +648,7 @@ export function HeroLogin({ onLogin, className }: { onLogin: (me: Me) => void; c
   const [loading, setLoading] = useState(false)
   const human = useTurnstile()
   const flag = COUNTRIES[0]
-  const box = (f: Field) => cn(fieldBox, invalid.has(f) && 'border-destructive ring-3 ring-destructive/15 focus-within:border-destructive focus-within:ring-destructive/15')
+  const box = (f: Field) => cn(fieldBox, invalid.has(f) && 'border-destructive focus-within:border-destructive focus-within:ring-0')
   const fixed = (f: Field) => setInvalid((x) => (x.has(f) ? new Set([...x].filter((y) => y !== f)) : x))
 
   async function submit() {
