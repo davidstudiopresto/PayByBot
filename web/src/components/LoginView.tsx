@@ -729,6 +729,8 @@ export function HeroLogin({ onLogin, className }: { onLogin: (me: Me) => void; c
         </button>
       </div>
       {(error || human.failed) && <Notice>{withPayByPhone(error ?? human.failed ?? '')}</Notice>}
+      {/* Cloudflare's check needs its (invisible) box in the page, else its token never comes and the button spins. */}
+      {human.enabled && <div ref={human.box} className="h-0 overflow-hidden" />}
       <button
         type="submit"
         disabled={loading}

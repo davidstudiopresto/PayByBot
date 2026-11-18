@@ -892,3 +892,22 @@ test('échec d’un paiement de PayByBot : la raison sous le véhicule, « Rées
   await expect(page.getByRole('button', { name: /Réessayer/ }).first()).toBeVisible()
   await expect(page.getByRole('switch', { name: /Renouvellement/ }).first()).not.toBeChecked()
 })
+
+test('accueil : sans compte PayByBot, le formulaire mène à l’inscription pré-remplie (vérification Cloudflare active)', async ({ page }) => {
+  // Online the human check is on: a stand-in for Cloudflare's script that answers at once.
+  await page.route('**/api/config', async (r) => {
+    const real = await (await r.fetch()).json()
+    await r.fulfill({ json: { ...real, turnstileSiteKey: 'test-key' } })
+  })
+  await page.route('https://challenges.cloudflare.com/**', (r) =>
+    r.fulfill({ contentType: 'text/javascript', body: 'window.turnstile={render:(el,o)=>{setTimeout(()=>o.callback("tok"),50);return "w"},reset(){},remove(){}}' }),
+  )
+  await page.route('**/api/login', (r) => r.fulfill({ status: 404, json: { detail: 'Aucun compte PayByBot pour ce compte PayByPhone.' } }))
+  await page.goto(LINK)
+  await page.getByLabel('Numéro de téléphone PayByPhone').fill('06 12 34 56 78')
+  await page.getByLabel('Mot de passe PayByPhone').fill('secret')
+  await page.getByRole('button', { name: 'Continuer' }).click()
+  await expect(page).toHaveURL(/#\/inscription$/, { timeout: 5000 })
+  await expect(page.locator('#username')).toHaveValue('06 12 34 56 78')
+  await expect(page.getByLabel('E-mail', { exact: true })).toHaveAttribute('aria-invalid', 'true')
+})
