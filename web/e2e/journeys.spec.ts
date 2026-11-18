@@ -900,3 +900,17 @@ test('accueil : sans compte PayByBot, le formulaire mène à l’inscription pr�
   await expect(page.locator('#username')).toHaveValue('06 12 34 56 78')
   await expect(page.getByLabel('E-mail', { exact: true })).toHaveAttribute('aria-invalid', 'true')
 })
+
+test('accueil : avec un compte PayByBot, le formulaire mène directement au tableau de bord', async ({ page }) => {
+  // The demo account stands in for an existing one: the typed login is swapped for it on the way to the server.
+  await page.route('**/api/login', (r) =>
+    r.continue({ postData: JSON.stringify({ ...r.request().postDataJSON(), username: 'demo', password: 'demo' }) }),
+  )
+  await page.goto(LINK)
+  await page.getByLabel('Numéro de téléphone PayByPhone').fill('06 12 34 56 78')
+  await page.getByLabel('Mot de passe PayByPhone').fill('secret')
+  await page.getByRole('button', { name: 'Continuer' }).click()
+  await expect(page.getByRole('button', { name: 'Déconnexion' }).first()).toBeVisible()
+  await expect(page).not.toHaveURL(/inscription/)
+  await expect(home(page)).toHaveCount(0)
+})

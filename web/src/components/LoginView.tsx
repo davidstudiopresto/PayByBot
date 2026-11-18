@@ -682,11 +682,11 @@ export function HeroLogin({ onLogin, className }: { onLogin: (me: Me) => void; c
         submit()
       }}
       className={cn(
-        'w-full max-w-[26rem] space-y-3 max-sm:[@media(max-height:700px)]:space-y-2 rounded-2xl border border-ink/10 bg-white p-5 text-left max-[380px]:p-4 max-[340px]:p-3 max-sm:[@media(max-height:600px)]:py-4 shadow-[0_30px_60px_-28px_rgb(11_16_36/0.3),0_8px_18px_-10px_rgb(11_16_36/0.1)] sm:p-7',
+        'w-full max-w-[26rem] space-y-3 max-sm:[@media(max-height:700px)]:space-y-2 rounded-2xl border border-ink/10 bg-white p-5 text-left max-[380px]:p-4 max-[340px]:p-3 max-sm:[@media(max-height:600px)]:py-4 shadow-[0_30px_60px_-28px_rgb(11_16_36/0.3),0_8px_18px_-10px_rgb(11_16_36/0.1)] sm:p-7 xl:max-w-[30rem] xl:space-y-4 xl:p-9',
         className,
       )}
     >
-      <h2 className="pb-2 text-center font-heading text-[1.35rem] font-medium tracking-[-0.02em] text-balance text-ink lg:text-left">
+      <h2 className="pb-2 text-center font-heading text-[1.35rem] font-medium tracking-[-0.02em] text-balance text-ink lg:text-left xl:text-[1.5rem]">
         Connectez votre compte <PayByPhone />
       </h2>
       <div className={box('phone')}>

@@ -427,12 +427,12 @@ export function Landing({ hosted, heroOnly = false, lean = false, onLogin }: { h
         )}
       >
         {/* Home: the text on the left and an example ticket card on the right (one column on a phone). */}
-        <div className={cn('mx-auto w-full max-w-6xl', heroOnly && 'grid grid-cols-1 items-center gap-6 max-sm:[@media(max-height:600px)]:gap-3 sm:gap-12 lg:grid-cols-[1.35fr_1fr] lg:gap-14')}>
+        <div className={cn('mx-auto w-full max-w-6xl', heroOnly && 'grid grid-cols-1 items-center gap-6 max-sm:[@media(max-height:600px)]:gap-3 sm:gap-12 lg:grid-cols-[1.35fr_1fr] lg:gap-14 xl:max-w-7xl xl:gap-20')}>
         <div className={cn('flex flex-col items-center text-center', heroOnly && 'lg:items-start lg:text-left')}>
           <h1
             className={cn(
               'font-heading text-[2rem] leading-[1.05] font-medium tracking-[-0.035em] text-ink sm:text-[2.6rem] lg:text-[3rem]',
-              heroOnly && 'max-sm:text-[1.7rem] max-sm:[@media(max-height:700px)]:text-[1.45rem] lg:text-[2.7rem] lg:[&>span]:whitespace-nowrap',
+              heroOnly && 'max-sm:text-[1.7rem] max-sm:[@media(max-height:700px)]:text-[1.45rem] lg:text-[2.7rem] xl:text-[3.2rem] lg:[&>span]:whitespace-nowrap',
             )}
           >
             <span className="block bg-[linear-gradient(90deg,var(--eu)_0%,#2a66d1_100%)] bg-clip-text text-transparent">Renouvellement automatique</span>
@@ -440,9 +440,8 @@ export function Landing({ hosted, heroOnly = false, lean = false, onLogin }: { h
             <span className="block">sur <PayByPhone /></span>
           </h1>
           {/* Home on a phone: no line under the title, so the sign-in card shows whole on the first screen. */}
-          <p className={cn('mt-6 max-w-[36rem] text-[1.05rem] leading-relaxed text-ink/60 lg:mt-8 lg:text-[1.2rem] lg:leading-[1.6]', heroOnly && 'max-sm:hidden')}>
-            Activez-le une fois, <PayByBot /> reprend votre ticket chaque semaine.{' '}
-            <span className="font-semibold text-ink">Zéro oubli, zéro amende.</span>
+          <p className={cn('mt-6 max-w-[36rem] text-[1.05rem] leading-relaxed text-ink/60 lg:mt-8 lg:text-[1.2rem] lg:leading-[1.6]', heroOnly && 'max-sm:hidden xl:max-w-[42rem] xl:text-[1.35rem]')}>
+            Activez-le une fois, PayByBot reprend votre ticket chaque semaine. Zéro oubli, zéro amende.
           </p>
           {/* Home: the sign-in card on the right replaces the button. Elsewhere, the button to the sign-up. */}
           {onLogin ? null : (
