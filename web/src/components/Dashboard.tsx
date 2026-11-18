@@ -84,6 +84,13 @@ function Ticket({
   // Renewal off and under 48 h left: the one thing to do on the card, said in red under the switch.
   const urgent = !!renewal && !renewal.enabled && !note && left < 48 * 3600000
   const hoursLeft = Math.max(1, Math.round(left / 3600000))
+  // Nothing takes the next ticket (the card offers « Activer le renouvellement »): said after the end, in red. Not for
+  // a paused or failing renewal, which says why under its switch.
+  const renewalOff =
+    !pending &&
+    ((renewable && !!renewal && !renewal.enabled && !note) ||
+      (renewable && !renewal) ||
+      (daily && !renewal && !data.autopilots.some((ap) => ap.enabled && sameCar(ap.plate, session.plate))))
 
   // Just activated (off, then on): the card confirms by itself, as Uber does, in under a second: a green halo around
   // the switch, the tick drawn again, the next renewal fading in, a short buzz on a phone. Never on the page's load.
@@ -125,7 +132,7 @@ function Ticket({
       {/* The ticket: when it ends (renewal on) or the time left, large, with the end beside it. */}
       <div className="border-t border-ink/[0.06] px-5 py-4">
         {/* One line: until when (the time left would say it twice); in red in its last 15 minutes. */}
-        <CoveredLine key={celebrate} end={end} soon={soon} />
+        <CoveredLine key={celebrate} end={end} soon={soon} renewalOff={renewalOff} />
         {renewing && (
           <DailyWizard
             data={data}

@@ -620,7 +620,7 @@ function TimeLeft({ ms }: { ms: number }) {
   )
 }
 
-export function CoveredLine({ end, soon = false }: { end: number; soon?: boolean }) {
+export function CoveredLine({ end, soon = false, renewalOff = false }: { end: number; soon?: boolean; renewalOff?: boolean }) {
   // Counted down once a minute.
   const [now, setNow] = useState(Date.now)
   useEffect(() => {
@@ -636,7 +636,16 @@ export function CoveredLine({ end, soon = false }: { end: number; soon?: boolean
       <span className={cn('block text-[1.05rem] font-medium whitespace-nowrap tabular-nums', soon ? 'text-destructive' : 'text-ink')}>
         <TimeLeft ms={end - now} />
       </span>
-      <span className={cn('block text-sm', soon ? 'text-destructive' : 'text-ink/60')}>Expire {expiresWhen(end, now)}</span>
+      {/* Renewal off: said after the end, that part alone in red (nothing takes the next ticket). */}
+      <span className={cn('block text-sm', soon ? 'text-destructive' : 'text-ink/60')}>
+        Expire {expiresWhen(end, now)}
+        {renewalOff && (
+          <>
+            {' · '}
+            <span className="whitespace-nowrap text-destructive">Renouvellement désactivé</span>
+          </>
+        )}
+      </span>
     </div>
     </div>
   )
