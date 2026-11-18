@@ -422,12 +422,12 @@ export function Landing({ hosted, heroOnly = false, lean = false, onLogin }: { h
       {/* Home (hero only): the page fits the window, the footer stays in view at the bottom. */}
       <section
         className={cn(
-          'rise relative w-full overflow-hidden bg-[radial-gradient(60rem_30rem_at_50%_0%,color-mix(in_srgb,var(--eu)_7%,transparent),transparent)] px-6 pt-14 sm:px-8 lg:flex lg:items-center lg:py-20',
+          'rise relative w-full overflow-hidden bg-[radial-gradient(60rem_30rem_at_50%_0%,color-mix(in_srgb,var(--eu)_7%,transparent),transparent)] px-6 pt-14 max-[340px]:px-4 sm:px-8 lg:flex lg:items-center lg:py-20',
           heroOnly ? 'flex flex-1 items-center pb-16' : 'lg:min-h-[calc(100dvh-4rem)]',
         )}
       >
         {/* Home: the text on the left and an example ticket card on the right (one column on a phone). */}
-        <div className={cn('mx-auto w-full max-w-6xl', heroOnly && 'grid items-center gap-12 lg:grid-cols-[1.35fr_1fr] lg:gap-14')}>
+        <div className={cn('mx-auto w-full max-w-6xl', heroOnly && 'grid grid-cols-1 items-center gap-12 lg:grid-cols-[1.35fr_1fr] lg:gap-14')}>
         <div className={cn('flex flex-col items-center text-center', heroOnly && 'lg:items-start lg:text-left')}>
           <h1
             className={cn(

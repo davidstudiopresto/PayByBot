@@ -682,11 +682,11 @@ export function HeroLogin({ onLogin, className }: { onLogin: (me: Me) => void; c
         submit()
       }}
       className={cn(
-        'w-full max-w-[26rem] space-y-3 rounded-2xl border border-ink/10 bg-white p-5 text-left shadow-[0_30px_60px_-28px_rgb(11_16_36/0.3),0_8px_18px_-10px_rgb(11_16_36/0.1)] sm:p-7',
+        'w-full max-w-[26rem] space-y-3 rounded-2xl border border-ink/10 bg-white p-5 text-left max-[380px]:p-4 max-[340px]:p-3 shadow-[0_30px_60px_-28px_rgb(11_16_36/0.3),0_8px_18px_-10px_rgb(11_16_36/0.1)] sm:p-7',
         className,
       )}
     >
-      <h2 className="pb-2 font-heading text-[1.35rem] font-medium tracking-[-0.02em] text-ink">
+      <h2 className="pb-2 text-center font-heading text-[1.35rem] font-medium tracking-[-0.02em] text-balance text-ink lg:text-left">
         Connectez votre compte <PayByPhone />
       </h2>
       <div className={box('phone')}>
@@ -704,7 +704,7 @@ export function HeroLogin({ onLogin, className }: { onLogin: (me: Me) => void; c
           onChange={(e) => (setPhone(e.target.value), fixed('phone'))}
           aria-label="Numéro de téléphone PayByPhone"
           aria-invalid={invalid.has('phone') || undefined}
-          className="h-full w-0 min-w-0 flex-1 bg-transparent px-2 text-lg text-ink tabular-nums outline-none placeholder:text-ink/30 max-sm:placeholder:text-base"
+          className="h-full w-0 min-w-0 flex-1 bg-transparent px-2 text-lg text-ink tabular-nums outline-none placeholder:text-ink/30 max-sm:placeholder:text-base max-[380px]:placeholder:text-[0.9rem] max-[340px]:placeholder:text-[0.85rem]"
         />
       </div>
       <div className={box('password')}>
@@ -716,7 +716,7 @@ export function HeroLogin({ onLogin, className }: { onLogin: (me: Me) => void; c
           onChange={(e) => (setPassword(e.target.value), fixed('password'))}
           aria-label="Mot de passe PayByPhone"
           aria-invalid={invalid.has('password') || undefined}
-          className="h-full min-w-0 flex-1 bg-transparent px-4 text-lg text-ink outline-none placeholder:text-ink/30 max-sm:placeholder:text-base"
+          className="h-full min-w-0 flex-1 bg-transparent px-4 text-lg text-ink outline-none placeholder:text-ink/30 max-sm:placeholder:text-base max-[380px]:placeholder:text-[0.9rem] max-[340px]:placeholder:text-[0.85rem]"
         />
         <button
           type="button"

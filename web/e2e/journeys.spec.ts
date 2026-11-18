@@ -655,13 +655,13 @@ test('alerte du téléphone : la validation part directement', async ({ page }) 
   await expect(page.getByRole('heading', { name: 'Paiement validé' })).toBeVisible()
 })
 
-test('mobile : le menu ☰ propose de se connecter', async ({ page, isMobile }) => {
+test('mobile : « Essayer gratuitement » dans la barre, « Se connecter » dans le menu ☰', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'menu ☰ : téléphone seulement')
   await page.goto(LINK)
   await expect(page.getByText(CURTAIN)).toBeHidden({ timeout: 5_000 })
-  await expect(page.getByRole('link', { name: 'Se connecter' }).or(page.getByRole('button', { name: 'Se connecter' })).first()).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Essayer gratuitement' })).toBeVisible()
   await page.getByRole('button', { name: 'Ouvrir le menu' }).click()
-  await expect(page.getByRole('button', { name: 'Fermer le menu' })).toBeVisible()
+  await expect(page.getByRole('navigation', { name: 'Pages' }).getByRole('link', { name: 'Se connecter' }).last()).toBeVisible()
 })
 
 test('aucune erreur dans la console sur les pages principales', async ({ page }) => {

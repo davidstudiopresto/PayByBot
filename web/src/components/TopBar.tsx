@@ -62,10 +62,10 @@ function MobileMenu({ signedIn }: { signedIn: boolean }) {
               {label}
             </a>
           ))}
-          {/* On a phone the bar keeps « Se connecter »: signing up is here instead. */}
+          {/* On a phone the bar keeps « Essayer gratuitement »: signing in is here instead. */}
           {!signedIn && (
-            <a href="#/inscription" onClick={() => setOpen(false)} className="block border-b border-ink/10 py-4 text-xl font-medium text-ink">
-              S’inscrire
+            <a href="#/connexion" onClick={() => setOpen(false)} className="block border-b border-ink/10 py-4 text-xl font-medium text-ink">
+              Se connecter
             </a>
           )}
         </nav>,
@@ -101,9 +101,9 @@ export function PublicTopBar({ signedIn = false }: { signedIn?: boolean }) {
           <a href="#/inscription" className={cn(ui.pillBlue, 'hidden lg:inline-flex')}>
             {TRY_LABEL}
           </a>
-          {/* On a phone, room for one button: « Se connecter » (signing up is in the ☰ menu and on the page). */}
-          <a href="#/connexion" className={cn(ui.pillBlue, 'lg:hidden')}>
-            Se connecter
+          {/* On a phone, room for one button: the trial (signing in is in the ☰ menu and on the home page). */}
+          <a href="#/inscription" className={cn(ui.pillBlue, 'lg:hidden')}>
+            Essayer<span className="max-[359px]:hidden">&nbsp;gratuitement</span>
           </a>
         </>
       )}
