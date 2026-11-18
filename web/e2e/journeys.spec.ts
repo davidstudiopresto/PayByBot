@@ -5,8 +5,8 @@ import { expect, test, type Page } from '@playwright/test'
 const LINK = '/r/e2ecode/'
 const CURTAIN = 'Fonctionne uniquement sur parrainage'
 
-/** The home page, whatever its title says: its sign-up button. */
-const home = (page: Page) => page.getByRole('link', { name: 'Essayer 1 mois gratuit' }).first()
+/** The home page, whatever its title says: its sign-in card. */
+const home = (page: Page) => page.getByRole('heading', { name: /Connectez votre compte/ })
 
 /** Opens the private link, waits for the curtain to lift, then signs in to the demo account. */
 async function demo(page: Page) {
@@ -154,17 +154,6 @@ test('assistant : une voiture résidente déjà renouvelée se voit, mais ne se 
   const wizard = page.getByRole('dialog')
   await expect(wizard.getByRole('button', { name: /AB-123-CD/ })).toBeDisabled()
   await expect(wizard.getByRole('button', { name: /LM-789-NP/ })).toHaveAttribute('aria-pressed', 'true') // the car whose « Automatiser » was clicked
-})
-
-test('accueil : activer l’interrupteur de l’exemple mène à l’inscription', async ({ page }) => {
-  await page.goto(LINK)
-  await expect(home(page)).toBeVisible()
-  const sample = page.getByRole('switch', { name: 'Activer le renouvellement automatique' })
-  await expect(sample).not.toBeChecked()
-  await press(page, 'Activer le renouvellement automatique')
-  await expect(page).toHaveURL(/#\/inscription/)
-  // The same card beside the sign-up and sign-in forms is a picture: nothing to press.
-  await expect(page.getByRole('switch', { name: 'Activer le renouvellement automatique' })).toHaveCount(0)
 })
 
 test('inscription : le code à 6 chiffres se colle d’un coup et se vérifie seul', async ({ page }) => {
