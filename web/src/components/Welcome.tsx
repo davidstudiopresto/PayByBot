@@ -278,8 +278,9 @@ export function Welcome({
           )}
           {/* The vehicle to automate: one, chosen with a tap (the resident one first). */}
           {offered.length > 0 && !noCard && (
-            <div className="mt-6" role="radiogroup" aria-label="Stationnement à automatiser">
-              <p className="mb-2 text-sm text-ink/60">{offered.length > 1 ? 'Par quelle automatisation commençons-nous ?' : 'Stationnement à automatiser :'}</p>
+            // One vehicle: nothing to choose, so no box: the line and its plate side by side.
+            <div className={cn('mt-6', offered.length === 1 && 'flex items-center gap-3')} role="radiogroup" aria-label="Stationnement à automatiser">
+              <p className={cn('text-sm text-ink/60', offered.length > 1 && 'mb-2')}>{offered.length > 1 ? 'Par quelle automatisation commençons-nous ?' : 'Stationnement à automatiser :'}</p>
               {/* Light: the plates side by side, two a line; the chosen one tinted with a check, no radio circles. */}
               <div className={cn('grid gap-2', offered.length > 1 && 'grid-cols-2')}>
                 {offered.map((v) => {
@@ -293,8 +294,10 @@ export function Welcome({
                       aria-label={v.plate}
                       onClick={() => setPicked(v.plate)}
                       className={cn(
-                        'relative flex w-full flex-col items-center justify-center gap-1 rounded-xl border px-3 py-3 text-center transition',
-                        on ? 'border-eu bg-eu/[0.05]' : 'border-transparent bg-white hover:border-ink/15',
+                        'relative flex flex-col items-center justify-center gap-1 text-center',
+                        offered.length === 1
+                          ? 'w-auto cursor-default'
+                          : cn('w-full rounded-xl border px-3 py-3 transition', on ? 'border-eu bg-eu/[0.05]' : 'border-transparent bg-white hover:border-ink/15'),
                       )}
                     >
                       {offered.length > 1 && on && (
