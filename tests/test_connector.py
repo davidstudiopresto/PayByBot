@@ -178,5 +178,52 @@ class Activate(unittest.TestCase):
                          ("75001", "9", 7, "card1"))
 
 
+class ScheduleHandi(unittest.TestCase):
+    def setUp(self):
+        os.environ["PAYBYBOT_SECRET"] = "t"
+        self.s = MagicMock()
+        answers = {"get_vehicles": [{"licensePlate": "AB-123-CD"}],
+                   "get_payment_accounts": {"paymentCards": [{"paymentAccountId": "card1", "cardType": "Visa",
+                                                              "maskedCardNumber": "4242"}]}}
+        self.s.call.side_effect = lambda name, *a, **kw: answers[name]
+
+    def schedule(self, args, took=None):
+        added, taken = [], []
+        ap = {"id": "r1", "plate": "AB-123-CD", "location": "75001"}
+        with patch.object(web, "current", return_value=self.s), \
+                patch.object(web, "handi_rate", return_value="777") as rate, \
+                patch.object(web, "add_autopilot", side_effect=lambda body, token: added.append(body) or dict(ap)), \
+                patch.object(web, "take_now", side_effect=lambda ap_id, token: taken.append(ap_id) or
+                             (took or {"covered": 1, "total": 1, "more": False, "error": None})):
+            out = connector.schedule_handi_ticket("tok", args)
+        return out, added, taken, rate
+
+    def test_one_arrondissement_every_day_taken_now(self):
+        out, added, taken, rate = self.schedule({"plate": "AB-123-CD", "zones": ["75001"], "cmis_card": True, "now": True})
+        body = added[0]
+        self.assertEqual((body.location, body.rate, body.duration, body.unit, body.cmis, body.now, body.days,
+                          body.locations, body.paymentAccountId),
+                         ("75001", "777", 1, "Days", True, True, [0, 1, 2, 3, 4, 5], None, "card1"))
+        self.assertEqual(rate.call_args[0][1:], ("75001", "AB-123-CD"))
+        self.assertEqual(taken, ["r1"])
+        self.assertEqual(out["pris_maintenant"]["couverts"], 1)
+
+    def test_several_arrondissements_and_no_ticket_now(self):
+        out, added, taken, _ = self.schedule({"plate": "AB-123-CD", "zones": ["75002", "75001"], "cmis_card": True,
+                                              "days": [0, 2]})
+        self.assertEqual((added[0].location, added[0].locations, added[0].days, added[0].now),
+                         ("75001", ["75001", "75002"], [0, 2], False))
+        self.assertEqual(taken, [])
+        self.assertNotIn("pris_maintenant", out)
+
+    def test_refused_without_the_cmis_card(self):
+        with self.assertRaises(HTTPException):
+            self.schedule({"plate": "AB-123-CD", "zones": ["75001"], "cmis_card": False})
+
+    def test_listed_as_a_tool(self):
+        self.assertIn("schedule_handi_ticket", [t["name"] for t in connector.TOOLS])
+        self.assertIn("schedule_handi_ticket", connector.HANDLERS)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -278,6 +278,25 @@ TOOLS = [
      "inputSchema": obj({"plate": {"type": "string", "description": "La plaque du véhicule, telle que dans get_account."}},
                         ["plate"]),
      "annotations": {"readOnlyHint": False, "destructiveHint": False, "openWorldHint": True}},
+    {"name": "schedule_handi_ticket", "title": "Programmer le ticket handicapé (CMI-S)",
+     "description": "Programme le ticket gratuit carte mobilité inclusion stationnement (CMI-S, « Handi ») à Paris "
+                    "pour un véhicule du compte : PayByBot prend un ticket d'une journée dans chaque arrondissement "
+                    "choisi, les jours choisis. À utiliser seulement si l'utilisateur a dit être titulaire de la "
+                    "carte CMI-S ; demander confirmation avant.",
+     "inputSchema": obj({
+         "plate": {"type": "string", "description": "La plaque du véhicule, telle que dans get_account."},
+         "zones": {"type": "array", "minItems": 1, "maxItems": 21, "uniqueItems": True,
+                   "items": {"type": "string", "pattern": r"^75(0(0[1-9]|1\d|20)|116)$"},
+                   "description": "Les arrondissements de Paris couverts en même temps (75001 à 75020, 75116)."},
+         "days": {"type": "array", "minItems": 1, "maxItems": 7, "uniqueItems": True,
+                  "items": {"type": "integer", "minimum": 0, "maximum": 6},
+                  "description": "Les jours (0 = lundi … 6 = dimanche). Par défaut lundi à samedi : le dimanche est "
+                                 "gratuit à Paris."},
+         "now": {"type": "boolean", "description": "Prendre le premier ticket tout de suite (si c'est un des jours)."},
+         "cmis_card": {"type": "boolean", "description": "true : l'utilisateur a confirmé être titulaire de la "
+                                                         "carte CMI-S."}},
+         ["plate", "zones", "cmis_card"]),
+     "annotations": {"readOnlyHint": False, "destructiveHint": False, "openWorldHint": True}},
     {"name": "pause_renewal", "title": "Mettre en pause",
      "description": "Met en pause un renouvellement ou un ticket programmé : aucun ticket n'est pris du premier au "
                     "dernier jour inclus (sans dernier jour : jusqu'à la reprise).",
@@ -341,6 +360,44 @@ def activate_renewal(token, args):
             "activation": (result or {}).get("activation") if isinstance(result, dict) else None}
 
 
+DAILY_LABEL = "Jours précis"  # as the dashboard names a programmed ticket (DailyTickets.tsx)
+
+
+def schedule_handi_ticket(token, args):
+    """As « Programmer un ticket » → Carte mobilité CMI-S on the dashboard: a day ticket, each zone its own Handi rate."""
+    if args.get("cmis_card") is not True:
+        raise HTTPException(400, "Le ticket CMI-S est réservé aux titulaires de la carte mobilité inclusion "
+                                 "stationnement : confirmez-le d'abord.")
+    s = web.current(token)
+    zones = sorted(set(args.get("zones") or []))
+    if not zones or not all(web.PARIS_ZONE.match(z) for z in zones):
+        raise HTTPException(400, "Le ticket CMI-S est proposé à Paris seulement (75001 à 75020).")
+    plate = web.plate_key(args.get("plate") or "")
+    vehicle = next((v for v in web.guarded(lambda: s.call("get_vehicles")) or []
+                    if web.plate_key(v.get("licensePlate") or "") == plate and not v.get("archived")), None)
+    if not vehicle:
+        raise HTTPException(400, "Ce véhicule n'est pas sur votre compte PayByPhone.")
+    plate = vehicle["licensePlate"]
+    payments = web.normalize_accounts(web.guarded(lambda: s.call("get_payment_accounts")) or {})
+    cards = [p for p in payments if p.get("kind") == "card" and not p.get("expired")]
+    if not cards:
+        raise HTTPException(400, "Aucune carte bancaire valide dans PayByPhone : ajoutez-en une dans l'application.")
+    rate = web.guarded(lambda: web.handi_rate(s, zones[0], plate))
+    paris = datetime.now(web.PARIS)
+    now = bool(args.get("now"))
+    body = web.Autopilot(location=zones[0], rate=str(rate), duration=1, unit="Days", plate=plate,
+                         paymentAccountId=cards[0]["id"], label=DAILY_LABEL, days=args.get("days") or [0, 1, 2, 3, 4, 5],
+                         tz="Europe/Paris", start="%02d:00" % ((paris.hour + 1) % 24), cmis=True, now=now,
+                         locations=zones if len(zones) > 1 else None)
+    ap = web.add_autopilot(body, token)
+    out = {"ok": True, "programme": renewal_view(ap)}
+    if now:  # the dashboard then takes it at once (one wave of zones; the scheduler takes the rest)
+        got = web.take_now(ap["id"], token)
+        out["pris_maintenant"] = {"couverts": got.get("covered"), "sur": got.get("total"),
+                                  "suite_par_le_planificateur": bool(got.get("more")), "erreur": got.get("error")}
+    return out
+
+
 def pause_renewal(token, args):
     return renewal_view(web.pause_autopilot(args["renewal_id"], web.Pause(start=args["start"], end=args.get("end")), token))
 
@@ -356,7 +413,7 @@ def stop_renewal(token, args):
 
 
 HANDLERS = {"get_account": get_account, "get_history": get_history, "activate_renewal": activate_renewal,
-            "pause_renewal": pause_renewal, "resume_renewal": resume_renewal, "stop_renewal": stop_renewal}
+            "schedule_handi_ticket": schedule_handi_ticket, "pause_renewal": pause_renewal, "resume_renewal": resume_renewal, "stop_renewal": stop_renewal}
 
 INSTRUCTIONS = ("PayByBot renouvelle automatiquement les tickets de stationnement PayByPhone (ticket résident chaque "
                 "semaine, tickets programmés certains jours). Commencez par get_account. Les tickets sont payés par "
