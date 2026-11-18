@@ -72,11 +72,14 @@ export function LoginView({
   hosted,
   signup = false,
   title,
+  forClaude = false,
 }: {
   onLogin: (me: Me) => void
   hosted: boolean
   signup?: boolean
   title?: ReactNode // instead of « Inscription » / « Connexion à PayByBot » (the Tarifs page asks to sign up)
+  /** Opened from Claude to connect PayByBot: said so, and remembered (Claude's access lasts, so does this login). */
+  forClaude?: boolean
 }) {
   const [mode, setMode] = useState<'phone' | 'email'>('phone') // PayByPhone identifier: phone number by default
   const country = 'FR'
@@ -95,7 +98,7 @@ export function LoginView({
   const box = (f: Field) => cn(fieldBox, invalid.has(f) && 'border-destructive focus-within:border-destructive focus-within:ring-0')
   const [showPassword, setShowPassword] = useState(false)
   const [accepted, setAccepted] = useState(false)
-  const [remember, setRemember] = useState(false)
+  const [remember, setRemember] = useState(forClaude)
   const [error, setError] = useState<string | null>(null)
   const [accountExists, setAccountExists] = useState(false)
   const [noAccount, setNoAccount] = useState(false)
@@ -263,13 +266,19 @@ export function LoginView({
           <h1
             className={ui.title}
           >
-            {title ?? (signup ? <>Inscrivez-vous avec vos <span className="sm:whitespace-nowrap">identifiants <PayByPhone /></span></> : <>Connexion à <PayByBot /></>)}
+            {title ?? (signup ? <>Inscrivez-vous avec vos <span className="sm:whitespace-nowrap">identifiants <PayByPhone /></span></> : forClaude ? <>Connecter Claude à <PayByBot /></> : <>Connexion à <PayByBot /></>)}
           </h1>
           {handed && signup && (
             <p className="mt-3 text-[1.05rem] leading-relaxed text-ink/60">Pas encore de compte <PayByBot /> : ajoutez votre e-mail pour le créer.</p>
           )}
           {/* Sign-up: the title says it all, no line under it. */}
-          {!signup && (
+          {!signup && forClaude && (
+            <p className="mt-3 text-[1.05rem] leading-relaxed text-ink/60">
+              {withPayByPhone('Connectez-vous une fois avec votre compte PayByPhone : vous revenez ensuite dans Claude.')}{' '}
+              Claude ne voit jamais votre mot de passe.
+            </p>
+          )}
+          {!signup && !forClaude && (
             <p className="mt-3 text-[1.05rem] leading-relaxed text-ink/60">
               {withPayByPhone('Avec votre compte PayByPhone.')}{' '}
               {hosted ? 'Mot de passe jamais enregistré.' : 'Vos identifiants restent sur cet ordinateur.'}{' '}

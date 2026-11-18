@@ -434,7 +434,7 @@ export default function App() {
         <Loading />
       ) : route === 'autoriser' ? (
         // Opened from Claude to connect PayByBot: signed in first (the page stays), then « Autoriser ».
-        me ? <Authorize me={me} /> : <LoginView signup={false} hosted={hosted} onLogin={(m) => signedIn(m, false)} />
+        me ? <Authorize me={me} /> : <LoginView signup={false} forClaude hosted={hosted} onLogin={(m) => signedIn(m, false)} />
       ) : inviteOnly && !me && invited !== 'yes' && route !== 'admin' && route !== 'connexion' && (!isMember() || route === 'inscription') ? (
         // Not invited: the home page, blurred, asks for an e-mail to send the link to. Signing in is always open (an
         // account already exists; the server only refuses a sign-up without a link), signing up needs a link. The
