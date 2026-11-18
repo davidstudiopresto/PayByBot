@@ -283,7 +283,7 @@ function IdleVehicles({ data, onChanged, hosted, demo, autoPlate, locked, onLogo
   return (
     <section className="mt-10 first:mt-5">
       <h2 className="text-[1.05rem] text-ink/60">{title}</h2>
-      <ul className="mt-2 divide-y divide-ink/[0.07] rounded-2xl border border-ink/10 bg-white">
+      <ul className="mt-2 rounded-2xl border border-ink/10 bg-white">
         {cars.map((v) =>
           row(
             v,

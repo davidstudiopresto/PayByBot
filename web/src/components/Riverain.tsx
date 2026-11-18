@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react'
-import { ArrowRight, Check, Loader2, Mail, Pause, Play, Repeat, RotateCw, X } from 'lucide-react'
+import { ArrowUpRight, Check, Loader2, Mail, Pause, Play, Repeat, RotateCw, X } from 'lucide-react'
 import { toast } from 'sonner'
 import NumberFlow from '@number-flow/react'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
@@ -629,25 +629,38 @@ export function CoveredLine({ end, soon = false, renewalOff = false }: { end: nu
   }, [])
   // Like the card's other rows: the status left, the time left right under its label (the exact end on hover).
   return (
-    <div>
+    <div className="flex items-center justify-between gap-4">
     {/* As PayByPhone's own card: the time left as the title (« covered » goes without saying), when it expires under
         it in plain words (« Expire demain, 15h19 »). In the last 15 minutes, in red. */}
-    <div title={`Jusqu’au ${when(end)}`}>
+    <div className="min-w-0" title={`Jusqu’au ${when(end)}`}>
       <span className={cn('block text-[1.05rem] font-medium whitespace-nowrap tabular-nums', soon ? 'text-destructive' : 'text-ink')}>
         <TimeLeft ms={end - now} />
       </span>
-      {/* Renewal off: said after the end, that part alone in red (nothing takes the next ticket). */}
+      {/* Renewal off: said under the end, in red (nothing takes the next ticket). */}
       <span className={cn('block text-sm', soon ? 'text-destructive' : 'text-ink/60')}>
         Expire {expiresWhen(end, now)}
-        {renewalOff && (
-          <>
-            {' · '}
-            <span className="whitespace-nowrap text-destructive">Renouvellement désactivé</span>
-          </>
-        )}
       </span>
+      {renewalOff && <span className="block text-sm text-destructive">Renouvellement désactivé</span>}
     </div>
+    <PayByPhoneLink />
     </div>
+  )
+}
+
+/** PayByPhone, where the ticket itself is: its app (PayByPhone's own link, as in the e-mails). */
+function PayByPhoneLink() {
+  return (
+    <a
+      href={PAYBYPHONE_APP}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Voir le ticket sur PayByPhone"
+      title="Voir le ticket sur PayByPhone"
+      className="flex shrink-0 items-center gap-1 rounded-full bg-ink/[0.05] px-3 py-1.5 text-sm font-medium text-ink transition hover:bg-ink/[0.09] max-sm:px-2.5 max-sm:text-[0.8rem]"
+    >
+      <PayByPhone />
+      <ArrowUpRight className="size-4 text-ink/45 max-sm:hidden" aria-hidden />
+    </a>
   )
 }
 
@@ -711,8 +724,8 @@ export function OpeningSwitch({ open, isOpen, on = false }: { open: () => void; 
 export function RenewalOff({ onActivate, busy = false }: { onActivate: () => void; busy?: boolean }) {
   // One button across the card (as Uber's actions): it says what to do, no line of text around it.
   return (
-    <button onClick={onActivate} disabled={busy} className={cn(ui.primary, 'h-12 text-base')} aria-label="Activer le renouvellement auto">
-      {busy ? <Loader2 className="size-5 animate-spin" /> : <>Activer le renouvellement <ArrowRight className="size-5" /></>}
+    <button onClick={onActivate} disabled={busy} className={cn(ui.primary, 'h-12 rounded-[9px] text-base')} aria-label="Activer le renouvellement auto">
+      {busy ? <Loader2 className="size-5 animate-spin" /> : 'Activer le renouvellement'}
     </button>
   )
 }
