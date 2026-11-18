@@ -1,9 +1,9 @@
+import { Avatar } from '@heroui/react'
 import { HostedFooter } from '@/components/Footer'
 import { PUBLISHER } from '@/components/Legal'
 import { PayByBot } from '@/components/signs'
 import { PublicTopBar } from '@/components/TopBar'
-import { TRY_LABEL, ui } from '@/lib/styles'
-import { cn } from '@/lib/utils'
+import { ui } from '@/lib/styles'
 
 const STUDIO_URL = 'https://studiopresto.fr/'
 
@@ -43,40 +43,31 @@ export function AboutPage({ hosted, signedIn = false }: { hosted: boolean; signe
           , une société basée à Paris.
         </p>
 
-        <h2 className="mt-12 text-[1.05rem] text-ink/60">Les fondateurs</h2>
-        <ul className="mt-5 grid grid-cols-2 gap-4">
+        <hr className="mt-8 border-ink/10" />
+        {/* One row per founder: the face, then the name over the role, the LinkedIn mark at the end. */}
+        <ul aria-label="Les fondateurs" className="mt-8 grid gap-6 sm:grid-cols-2">
           {FOUNDERS.map((f) => (
-            <li key={f.name} className="flex flex-col items-center rounded-2xl border border-ink/10 px-4 py-6 text-center">
-              {f.photo ? (
-                <img src={f.photo} alt={f.name} className="size-32 rounded-full object-cover sm:size-36" />
-              ) : (
-                <span aria-hidden className="grid size-32 place-items-center rounded-full sm:size-36 bg-ink/[0.05] font-heading text-2xl font-medium text-ink/45">
-                  {initials(f.name)}
-                </span>
-              )}
-              {/* The name alone is centred under the photo, the LinkedIn mark hangs just after it (in the line on a phone). */}
-              <span className="relative mt-4 text-[1.05rem] font-medium text-ink">
-                {f.name}
-                <a
-                  href={f.linkedin}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`${f.name} sur LinkedIn`}
-                  className="ml-1.5 inline-block align-[-2px] text-[#0a66c2] transition hover:opacity-75 sm:absolute sm:top-1/2 sm:left-full sm:ml-2 sm:-translate-y-1/2"
-                >
-                  <LinkedInIcon className="size-4" />
-                </a>
+            <li key={f.name} className="flex items-center gap-4">
+              <Avatar className="size-20 shrink-0">
+                {f.photo && <Avatar.Image src={f.photo} alt={f.name} />}
+                <Avatar.Fallback>{initials(f.name)}</Avatar.Fallback>
+              </Avatar>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[1.05rem] font-medium text-ink">{f.name}</span>
+                <span className="block text-sm text-ink/60">{f.role}</span>
               </span>
-              <span className="text-sm text-ink/60">{f.role}</span>
+              <a
+                href={f.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${f.name} sur LinkedIn`}
+                className="-m-2 shrink-0 p-2 text-ink/35 transition hover:text-[#0a66c2]"
+              >
+                <LinkedInIcon className="size-[18px]" />
+              </a>
             </li>
           ))}
         </ul>
-
-        {!signedIn && (
-          <a href="#/inscription" className={cn(ui.primary, 'mt-14 w-full sm:w-fit sm:px-8')}>
-            {TRY_LABEL}
-          </a>
-        )}
       </main>
       <HostedFooter className="px-6 pb-8" hosted={hosted} />
     </div>
