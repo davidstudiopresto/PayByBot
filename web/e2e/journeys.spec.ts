@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { expect, test, type Page } from '@playwright/test'
 
 /** The key journeys of paybybot.fr, on the demo account (no real PayByPhone call, nothing paid). */
@@ -912,4 +913,29 @@ test('accueil : avec un compte PayByBot, le formulaire mène directement au tabl
   await expect(page.getByRole('button', { name: 'Déconnexion' }).first()).toBeVisible()
   await expect(page).not.toHaveURL(/inscription/)
   await expect(home(page)).toHaveCount(0)
+})
+
+test('Claude : connecteur PayByBot de bout en bout (client, « Autoriser », code PKCE, outils MCP)', async ({ page, request }) => {
+  const redirect = 'https://claude.ai/api/mcp/auth_callback'
+  const meta = await (await request.get('/.well-known/oauth-authorization-server')).json()
+  expect(meta.code_challenge_methods_supported).toContain('S256')
+  const { client_id } = await (await request.post('/oauth/register', { data: { client_name: 'Claude', redirect_uris: [redirect] } })).json()
+  const verifier = 'v'.repeat(64)
+  const digest = createHash('sha256').update(verifier).digest('base64url')
+  await demo(page) // signed in first (the demo: on this computer only)
+  let back = ''
+  await page.route('https://claude.ai/**', (r) => { back = r.request().url(); return r.fulfill({ body: 'ok' }) })
+  await page.goto('/oauth/authorize?' + new URLSearchParams({ client_id, redirect_uri: redirect, response_type: 'code', state: 'st', code_challenge: digest, code_challenge_method: 'S256' }))
+  await expect(page.getByRole('heading', { name: 'Autoriser Claude' })).toBeVisible()
+  await page.getByRole('button', { name: 'Autoriser' }).click()
+  await expect.poll(() => back).toContain('code=')
+  const code = new URL(back).searchParams.get('code')!
+  expect(new URL(back).searchParams.get('state')).toBe('st')
+  const tokens = await (await request.post('/oauth/token', { form: { grant_type: 'authorization_code', code, client_id, redirect_uri: redirect, code_verifier: verifier } })).json()
+  const mcp = (msg: object) => request.post('/mcp', { data: msg, headers: { authorization: `Bearer ${tokens.access_token}` } })
+  expect((await (await mcp({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18' } })).json()).result.serverInfo.name).toBe('PayByBot')
+  const account = await (await mcp({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'get_account', arguments: {} } })).json()
+  expect(account.result.isError).toBeFalsy()
+  expect(account.result.structuredContent.vehicules.map((v: { plate: string }) => v.plate)).toContain('AB123CD')
+  expect((await request.post('/mcp', { data: {} })).status()).toBe(401) // no token: « connectez PayByBot »
 })

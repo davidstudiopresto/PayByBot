@@ -27,15 +27,16 @@ const AdminPage = lazy(() => import('@/components/Admin').then((m) => ({ default
 const ONBOARDING_KEY = 'pbb-onboarding'
 const Welcome = lazy(() => import('@/components/Welcome').then((m) => ({ default: m.Welcome })))
 const SubscriptionDialog = lazy(() => import('@/components/Subscription').then((m) => ({ default: m.SubscriptionDialog })))
+const Authorize = lazy(() => import('@/components/Authorize').then((m) => ({ default: m.Authorize })))
 const Mockup = lazy(() => import('@/components/Mockup').then((m) => ({ default: m.Mockup })))
 const EmptyVariants = lazy(() => import('@/components/Mockup').then((m) => ({ default: m.EmptyVariants })))
 
-type Route = 'faq' | 'comment-ca-marche' | 'qui-sommes-nous' | 'tarifs' | 'connexion' | 'inscription' | 'demo' | 'admin' | 'bienvenue' | 'valider' | null
+type Route = 'faq' | 'comment-ca-marche' | 'qui-sommes-nous' | 'tarifs' | 'connexion' | 'inscription' | 'demo' | 'admin' | 'bienvenue' | 'valider' | 'autoriser' | null
 
 function routeFromHash(hash: string): Route {
   const id = hash.replace(/^#\/?/, '').split('?')[0]
   return id === 'faq' || id === 'comment-ca-marche' || id === 'qui-sommes-nous' || id === 'tarifs' || id === 'connexion' || id === 'inscription' || id === 'demo' || id === 'admin' ||
-    id === 'bienvenue' || id === 'valider'
+    id === 'bienvenue' || id === 'valider' || id === 'autoriser'
     ? id
     : null
 }
@@ -423,6 +424,9 @@ export default function App() {
         <ValidatePayment />
       ) : me === undefined || (inviteOnly && !me && invited === null) ? (
         <Loading />
+      ) : route === 'autoriser' ? (
+        // Opened from Claude to connect PayByBot: signed in first (the page stays), then « Autoriser ».
+        me ? <Authorize me={me} /> : <LoginView signup={false} hosted={hosted} onLogin={(m) => setMe(m)} />
       ) : inviteOnly && !me && invited !== 'yes' && route !== 'admin' && route !== 'connexion' && (!isMember() || route === 'inscription') ? (
         // Not invited: the home page, blurred, asks for an e-mail to send the link to. Signing in is always open (an
         // account already exists; the server only refuses a sign-up without a link), signing up needs a link. The

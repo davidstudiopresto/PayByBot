@@ -4170,7 +4170,8 @@ def get_account(pbb_session: str = Cookie(None)):
             "subscriptionEnded": state == "trial_over" and bool(account.get("stripe_subscription")),
             # A renewal is activated only with a subscription, chosen even during the free month.
             "subscribed": state in ("ok", "grace"),
-            "suvPlates": list(account.get("suv_plates") or [])}
+            "suvPlates": list(account.get("suv_plates") or []),
+            "claudeSince": account.get("mcp_since") or None}
 
 
 class Checkout(BaseModel):
@@ -5713,6 +5714,12 @@ class Assets(StaticFiles):
         if path.endswith(".css"):
             return RawResponse("", media_type="text/css", headers={"Cache-Control": "no-store"})
         return RawResponse(status_code=404)
+
+
+# PayByBot as a connector in Claude (OAuth + MCP): before the catch-all route below.
+from paybybot3 import connector as _connector  # noqa: E402
+
+_connector.register_routes(app)
 
 
 @app.get("/favicon.ico", include_in_schema=False)

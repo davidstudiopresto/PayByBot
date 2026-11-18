@@ -92,6 +92,8 @@ export type Account = {
   subscribed?: boolean
   /** Plates the user ticked as SUV (PayByPhone does not say): the SUV price applies. */
   suvPlates?: string[]
+  /** Connected to Claude (PayByBot as a connector) since then; null when not. */
+  claudeSince?: string | null
 }
 /** « Mon abonnement »: the Stripe subscription as PayByBot shows it (amounts in cents). */
 export type Subscription = {
@@ -260,6 +262,10 @@ export const api = {
   /** The resident arrondissement, looked for while the code is read (takes seconds on PayByPhone). */
   signupZone: () => post<{ zone: string | null }>('/api/signup/zone'),
   deleteData: () => request('/api/me/data', { method: 'DELETE' }),
+  /** Claude as a connector: who asks (« Autoriser Claude »), the answer, and « Déconnecter Claude ». */
+  oauthRequest: (r: string) => request<{ client: string }>(`/api/oauth/request?r=${encodeURIComponent(r)}`),
+  oauthApprove: (r: string, allow: boolean) => post<{ redirect: string }>('/api/oauth/approve', { r, allow }),
+  disconnectClaude: () => post<{ ok: boolean }>('/api/oauth/disconnect'),
   overview: () => request<Overview>('/api/overview'),
   /** The weeks already paid, from PayByPhone, newest first. */
   /** Home zone guessed from the PayByPhone history (null if none). */

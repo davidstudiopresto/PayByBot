@@ -233,6 +233,9 @@ function AccountDialog({
               </Rows>
             </Section>
 
+            {/* Claude as a connector: the address to paste in Claude, or « Déconnecter » once connected. */}
+            {!demo && account && <ClaudeSection account={account} onChanged={(claudeSince) => setAccount({ ...account, claudeSince })} />}
+
             {/* PayByPhone's paid SMS, a section of their own (only when their state is known): the box above keeps its
                 three icon rows; here the state, its cost and the switch, which the user turns off himself. */}
             {sms.enabled != null && (
@@ -313,6 +316,66 @@ function Row({ label, icon: Icon, children }: { label: string; /** A sober icon 
       </span>
       <span className="min-w-0 truncate text-right text-ink">{children}</span>
     </li>
+  )
+}
+
+/** « Claude » in Mon compte: how to connect PayByBot (the address to paste), or since when and « Déconnecter ». */
+function ClaudeSection({ account, onChanged }: { account: Account; onChanged: (since: string | null) => void }) {
+  const [busy, setBusy] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const address = `${window.location.origin}/mcp`
+  async function disconnect() {
+    setBusy(true)
+    try {
+      await api.disconnectClaude()
+      onChanged(null)
+      toast.success('Claude est déconnecté.')
+    } catch (e) {
+      toast.error((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(address)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      toast.message(address)
+    }
+  }
+  const since = account.claudeSince ? new Date(account.claudeSince) : null
+  return (
+    <Section title="Claude">
+      <Rows>
+        <li className={rowClass}>
+          <span className="min-w-0">
+            {since ? (
+              <>
+                <span className="block text-ink">Connecté</span>
+                <span className="block text-sm text-ink/60">depuis le {since.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</span>
+              </>
+            ) : (
+              <>
+                <span className="block text-ink">Pilotez PayByBot depuis Claude</span>
+                <span className="block text-sm text-ink/60">Dans Claude : Réglages › Connecteurs › Ajouter, puis collez l’adresse.</span>
+              </>
+            )}
+          </span>
+          {since ? (
+            <button onClick={disconnect} disabled={busy} className={cn(ui.pillGray, 'shrink-0 gap-1.5')}>
+              {busy && <Loader2 className="size-3.5 animate-spin" />}
+              Déconnecter
+            </button>
+          ) : (
+            <button onClick={copy} className={cn(ui.pillGray, 'shrink-0')}>
+              {copied ? 'Copiée' : 'Copier l’adresse'}
+            </button>
+          )}
+        </li>
+      </Rows>
+    </Section>
   )
 }
 
