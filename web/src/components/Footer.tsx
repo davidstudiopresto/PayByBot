@@ -20,7 +20,7 @@ export function HostedFooter({ className }: { className?: string; hosted?: boole
         ))}
       </nav>
       {/* Said everywhere, not only in the legal pages: an independent service, not PayByPhone's. */}
-      <p className="text-ink/45">PayByBot est un service indépendant, non affilié à PayByPhone.</p>
+      <p className="text-balance text-ink/45">PayByBot est un service indépendant, non affilié à PayByPhone.</p>
     </footer>
   )
 }
