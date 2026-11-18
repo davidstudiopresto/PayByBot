@@ -716,7 +716,7 @@ export function Dashboard({
             )}
             residents={residentPlates}
             onProgram={(plate) => (setBackPlate(plate), setProgramAsked((n) => n + 1))}
-            title={running.length || data.autopilots.some((ap) => ap.enabled && !ruleState(ap).finished) ? 'Autres véhicules' : 'Véhicules'}
+            title={running.length || data.autopilots.some((ap) => ap.enabled && !ruleState(ap).finished) ? 'Autres véhicules' : 'Programmer un ticket'}
           />
         )}
         {data && residentFor && (
