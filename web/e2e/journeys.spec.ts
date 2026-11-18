@@ -351,8 +351,7 @@ test('programmer un ticket : le type de véhicule choisit le tarif visiteur', as
   await page.getByRole('option', { name: /Paris/ }).first().click()
   await page.getByRole('button', { name: 'Suivant' }).click()
   // Straight to the days: the heavy visitor rate, 6 hours in Paris at three times the light price.
-  await expect(page.getByText('Prix d’un ticket')).toBeVisible()
-  await expect(page.getByText('72,00 €').first()).toBeVisible()
+  await expect(page.getByText(/Par semaine · \d+ × 72,00/)).toBeVisible()
 })
 
 test('impasses : une zone sans ticket visiteur le dit, au lieu d’une question vide', async ({ page }) => {
@@ -407,7 +406,7 @@ test('programmer un ticket : carte mobilité CMI-S, « Tous » coche tout Paris'
   await expect(page.getByRole('button', { name: 'Suivant' })).toBeDisabled() // the card attestation first
   await page.getByRole('checkbox', { name: /titulaire/ }).check()
   await page.getByRole('button', { name: 'Suivant' }).click()
-  await expect(page.getByText(/ticket carte mobilité CMI-S d’une journée/)).toBeVisible()
+  await expect(page.getByText('Pris à 5 h. Dimanche et jours fériés gratuits.')).toBeVisible()
 })
 
 test('programmer un ticket CMI-S : gratuit, 0,00 € (jamais « prix indisponible »)', async ({ page }) => {
@@ -420,7 +419,7 @@ test('programmer un ticket CMI-S : gratuit, 0,00 € (jamais « prix indisponibl
   await page.getByRole('checkbox', { name: 'Tous' }).check()
   await page.getByRole('checkbox', { name: /titulaire/ }).check()
   await page.getByRole('button', { name: 'Suivant' }).click()
-  await expect(page.getByText(/0,00/).first()).toBeVisible()
+  await expect(page.getByText('Gratuit', { exact: true })).toBeVisible()
   await expect(page.getByText(/Prix indisponible/)).toHaveCount(0)
 })
 
@@ -689,7 +688,7 @@ test('carte bancaire qui expire ce mois-ci : bannière rouge, partie avec une ca
   await expect(page.getByRole('alert').filter({ hasText: 'expire ce mois-ci' })).toBeVisible()
   validUntil = later // renewed in PayByPhone: the next refresh drops the banner
   await page.reload()
-  await expect(page.getByText(/^(Véhicules|Autres véhicules|Tickets? en cours)$/).first()).toBeVisible() // the page is there
+  await expect(page.getByText(/^(Programmer un ticket|Autres véhicules|Tickets? en cours)$/).first()).toBeVisible() // the page is there
   await expect(page.getByRole('alert').filter({ hasText: 'expire ce mois-ci' })).toHaveCount(0)
 })
 

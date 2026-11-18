@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Car, Check, Loader2, Pencil, RotateCw } from 'lucide-react'
+import { Car, Loader2, Pencil, RotateCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { NoPayment } from '@/components/NoPayment'
@@ -734,6 +734,7 @@ export function DailyWizard({
   const [cost, setCost] = useState<Money | null | undefined>(undefined)
   // No answer from PayByPhone (not a free ticket): « prix indisponible » with « Réessayer », never 0,00 €.
   const [costFailed, setCostFailed] = useState(false)
+  const free = cost !== undefined && !costFailed && !cost?.amount // e.g. the CMI-S day ticket: « Gratuit », not « 0,00 € »
   const [costTry, setCostTry] = useState(0)
   // The ticket now, not at the next window (5 h for CMI-S): the user sees at once that it works.
   const nowBox = today && (
@@ -1334,28 +1335,26 @@ export function DailyWizard({
                             aria-pressed={on}
                             onClick={() => setDays((list) => (list.includes(i) ? list.filter((x) => x !== i) : [...list, i].sort()))}
                             className={cn(
-                              'flex h-14 flex-col items-center justify-center gap-1 rounded-xl border text-sm transition',
-                              on ? 'border-[#4e9aa0] bg-[#4e9aa0]/[0.06] font-medium text-ink' : 'border-ink/15 text-ink/45 hover:border-ink/30',
+                              'flex h-11 items-center justify-center rounded-xl border text-sm transition',
+                              on ? 'border-[#4e9aa0] bg-[#4e9aa0]/[0.08] font-medium text-ink' : 'border-ink/15 text-ink/45 hover:border-ink/30',
                             )}
                           >
                             {d}
-                            <span className={cn('grid size-4 place-items-center rounded-full', on ? 'bg-[#4e9aa0] text-white' : 'border border-ink/20')}>
-                              {on && <Check className="size-3" strokeWidth={3} />}
-                            </span>
                           </button>
                         )
                       })}
                       {paris && (
-                        <div className="flex h-14 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-ink/10 text-sm text-ink/30">
+                        <div className="flex h-11 items-center justify-center rounded-xl border border-dashed border-ink/10 text-sm text-ink/30" title="Gratuit à Paris">
                           Dim
-                          <span className="text-[0.65rem] leading-none">gratuit</span>
                         </div>
                       )}
                     </div>
-                    {handi(effective) && paris && (
-                      <p className="mt-3 text-sm text-ink/60">Le ticket carte mobilité CMI-S d’une journée est pris automatiquement à 5 h, chaque jour choisi.</p>
+                    {/* One short line: when the ticket is taken (CMI-S) and the free days. */}
+                    {paris && (
+                      <p className="mt-2 text-sm text-ink/45">
+                        {handi(effective) ? 'Pris à 5 h. ' : ''}Dimanche et jours fériés gratuits.
+                      </p>
                     )}
-                    {paris && <p className="mt-2 text-sm text-ink/45">À Paris, le dimanche et les jours fériés sont gratuits : aucun ticket n’est pris.</p>}
                   </div>
                 )}
               </div>
@@ -1378,29 +1377,26 @@ export function DailyWizard({
                   <span className="text-ink/60">
                     {calendar
                       ? `Au total : ${count} ticket${count > 1 ? 's' : ''}${cost ? ` à ${euros(cost)}` : ''}`
-                      : `Par semaine (${days.length} jour${days.length > 1 ? 's' : ''})`}
+                      : free
+                        ? `Par semaine · ${days.length} ticket${days.length > 1 ? 's' : ''}`
+                        : `Par semaine · ${days.length} × ${cost === undefined ? '…' : euros(cost ?? { amount: 0, currency: 'EUR' })}`}
                   </span>
                   <span className="text-[0.95rem] font-semibold text-ink tabular-nums">
                     {cost === undefined ? (
                       <Loader2 className="inline size-4 animate-spin text-ink/45" />
+                    ) : free ? (
+                      'Gratuit'
                     ) : (
                       euros({ amount: (cost?.amount ?? 0) * count, currency: cost?.currency ?? 'EUR' })
                     )}
                   </span>
                 </div>
-                {/* On a specific date the ticket's price is already in the line above. */}
-                <div className={cn('mt-1 flex justify-between gap-4', calendar && 'hidden')}>
-                  <span className="text-ink/45">Prix d’un ticket</span>
-                  <span className="text-ink/60 tabular-nums">
-                    {/* No price from PayByPhone (a free ticket, e.g. Handi): 0 €, not a dash. */}
-                    {cost === undefined ? '…' : costFailed ? (
-                      <button onClick={() => setCostTry((n) => n + 1)} className={ui.link}>Prix indisponible · Réessayer</button>
-                    ) : euros(cost ?? { amount: 0, currency: 'EUR' })}
-                  </span>
-                </div>
+                {/* The ticket's price is in the line above (« 6 × 3,20 € »); unavailable, a retry. */}
+                {costFailed && (
+                  <button onClick={() => setCostTry((n) => n + 1)} className={cn('mt-1', ui.link)}>Prix indisponible · Réessayer</button>
+                )}
                 </>
                 )}
-                <p className={cn('mt-2 text-sm text-ink/45', calendar && 'hidden')}>{withPayByPhone('Payé à PayByPhone au tarif habituel, à chaque ticket.')}</p>
               </div>
             </>
           )}

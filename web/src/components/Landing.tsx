@@ -24,7 +24,7 @@ const FEATURES: Question[] = [
 const FEATURE_ICONS = [RefreshCw, Pause, BellRing, Headset]
 
 /** Each step's screen (demo account, captured at one size: 1040 × 940). */
-const STEP_SHOTS = ['/how/1-connexion.png?v=19', '/how/2-activation.png?v=19', '/how/3-tableau-de-bord.png?v=20']
+const STEP_SHOTS = ['/how/1-connexion.png?v=22', '/how/2-activation.png?v=22', '/how/3-tableau-de-bord.png?v=22']
 
 /**
  * Real users' feedback only, given with their consent: [first name and last-name initial, e.g. « Charles H. », one sentence].
@@ -168,9 +168,9 @@ function useShotScale(ref: RefObject<HTMLDivElement | null>) {
 }
 
 /** The real switch laid over the pictures of steps 2 and 3, at the same place and scale (the picture: a 520 × 470
- *  window, the switch 48 × 24 at 439, 239): off on step 2, it slides on as step 3 comes, and off again back on step 2.
+ *  window, the switch 48 × 24 at 439, 245): off on step 2, it slides on as step 3 comes, and off again back on step 2.
  *  Only a picture: not focusable, not read. */
-/** « C'est bien moi », laid over step 1's picture at its place (476 × 48 at 22, 254 in the 520-wide picture): pressed
+/** « C'est bien moi », laid over step 1's picture at its place (476 × 48 at 22, 275 in the 520-wide picture): pressed
  *  as step 2 is asked for (a light fill, a little smaller). Only a picture: not focusable, not read. */
 function ShotPress({ shown, pressed }: { shown: boolean; pressed: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -182,7 +182,7 @@ function ShotPress({ shown, pressed }: { shown: boolean; pressed: boolean }) {
       inert
       className={cn('pointer-events-none absolute origin-top-left bg-white transition-opacity duration-300', shown ? 'opacity-100' : 'opacity-0')}
       // 3 px wider all round than the picture's button, so none of it shows while pressed.
-      style={{ top: 251 * scale, left: 19 * scale, width: 482, height: 54, padding: 3, transform: `scale(${scale})` }}
+      style={{ top: 272 * scale, left: 19 * scale, width: 482, height: 54, padding: 3, transform: `scale(${scale})` }}
     >
       <div
         className={cn(
@@ -206,7 +206,7 @@ function ShotSwitch({ shown, on }: { shown: boolean; on: boolean }) {
       inert
       // Placed from the picture's width (it is shown from its top, at full width, whatever the frame's height).
       className={cn('pointer-events-none absolute origin-top-left rounded-full bg-white transition-opacity duration-300', shown ? 'opacity-100' : 'opacity-0')}
-      style={{ top: 239 * scale, left: 439 * scale, transform: `scale(${scale})` }}
+      style={{ top: 245 * scale, left: 439 * scale, transform: `scale(${scale})` }}
     >
       <ToggleSwitch checked={on} label="" onPress={() => {}} />
     </div>

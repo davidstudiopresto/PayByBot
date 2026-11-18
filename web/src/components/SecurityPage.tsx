@@ -1,8 +1,8 @@
 import { ui } from '@/lib/styles'
 import type { ReactNode } from 'react'
-import { Building2, KeyRound, Lock, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Building2, KeyRound, Lock, ShieldCheck } from 'lucide-react'
 import { HostedFooter } from '@/components/Footer'
-import { LEGAL_UPDATED, Mailto, PUBLISHER } from '@/components/Legal'
+import { LEGAL_UPDATED, legalBack, Mailto, PUBLISHER } from '@/components/Legal'
 import { PublicTopBar } from '@/components/TopBar'
 
 const PRACTICE = [
@@ -47,8 +47,15 @@ const SUBPROCESSORS = [
 export function SecurityPage({ hosted, signedIn = false }: { hosted: boolean; signedIn?: boolean }) {
   return (
     <div className="flex min-h-dvh flex-col bg-background text-ink">
-      <PublicTopBar signedIn={signedIn} />
-      <main className="mx-auto w-full max-w-[40rem] flex-1 px-6 pt-16 pb-20 sm:pt-20">
+      {/* Signed in (from the dashboard's footer): one way back, « ← Mon espace », as on the legal pages. */}
+      {signedIn ? (
+        <a href={legalBack(true).href} className="inline-flex items-center gap-1.5 self-start px-4 pt-5 text-[0.95rem] text-ink hover:text-ink/60 sm:px-6">
+          <ArrowLeft className="size-4" strokeWidth={1.75} /> {legalBack(true).label}
+        </a>
+      ) : (
+        <PublicTopBar />
+      )}
+      <main className={`mx-auto w-full max-w-[40rem] flex-1 px-6 pb-20 ${signedIn ? 'pt-9' : 'pt-16 sm:pt-20'}`}>
         <h1 className={ui.title}>Sécurité et données</h1>
         <p className={ui.subtitle}>
           Votre mot de passe n’est jamais stocké. Vos données sont chiffrées, hébergées à Paris, et effacées dès que vous
