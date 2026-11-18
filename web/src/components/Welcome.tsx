@@ -1,11 +1,11 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { ArrowRight, Car, Check, CreditCard, Loader2, LogOut, Mail, MapPin, Phone, RefreshCw, type LucideIcon } from 'lucide-react'
+import { ArrowRight, Check, CreditCard, Loader2, LogOut, Mail, MapPin, Phone, RefreshCw, type LucideIcon } from 'lucide-react'
 import { RemotePanel } from '@/components/RemoteScene'
 import { PayByPhone, Plate, withPayByPhone, Wordmark } from '@/components/signs'
 import { api, type Me, type Overview, type PricedVehicle } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { ui } from '@/lib/styles'
-import { LineBone, PlateBone } from '@/components/Skeletons'
+import { LineBone } from '@/components/Skeletons'
 import { SmoothHeight } from '@/components/ui/smooth-height'
 import { activateWeekly, AddCardGuide, NoWallets, clearPending, savePending, savePlateAfterPay, when, type PendingRenewal, SmsHelp, SmsLabel, SmsSwitch, useSms } from '@/components/Riverain'
 import { PlansDialog } from '@/components/Pricing'
@@ -104,7 +104,6 @@ export function Welcome({
   // The free month used up: the offer opens, the renewal chosen here is activated on the way back from Stripe.
   const [plans, setPlans] = useState<PendingRenewal[] | null>(null)
   const [afterPay, setAfterPay] = useState<string | null>(null)
-  const n = vehicles?.length ?? 0
   const sms = useSms()
   const zones = [...new Set((vehicles ?? []).flatMap((v) => (v.zone ? [v.zone] : [])))]
 
@@ -190,21 +189,6 @@ export function Welcome({
                   )}
                 </Line>
               )}
-              {/* Every vehicle of the account, above its residence (the choice below says which one to automate). */}
-              <Line label={n > 1 ? 'Véhicules' : 'Véhicule'} icon={Car}>
-                {vehicles === undefined ? (
-                  <PlateBone className="ml-auto" />
-                ) : vehicles.length ? (
-                  // Two plates a line on a computer (one column on a phone, where two do not fit), on the right.
-                  <span className={cn('inline-grid justify-items-end gap-1.5', vehicles.length > 1 && 'sm:grid-cols-2')}>
-                    {vehicles.map((v) => (
-                      <Plate key={v.plate} plate={v.plate} size="sm" />
-                    ))}
-                  </span>
-                ) : (
-                  <span className="text-ink/60">Aucun</span>
-                )}
-              </Line>
               {/* Its own line: the zone(s) where PayByPhone gives the resident rate (« 75001 »). */}
               {(vehicles === undefined || zones.length > 0) && (
                 <Line label="Résidence" icon={MapPin}>
@@ -280,9 +264,9 @@ export function Welcome({
           {offered.length > 0 && !noCard && (
             // One vehicle: nothing to choose, so no box: the line and its plate side by side.
             <div className={cn('mt-6', offered.length === 1 && 'flex items-center gap-3')} role="radiogroup" aria-label="Stationnement à automatiser">
-              <p className={cn('text-sm text-ink/60', offered.length > 1 && 'mb-2')}>{offered.length > 1 ? 'Par quelle automatisation commençons-nous ?' : 'Stationnement à automatiser :'}</p>
-              {/* Light: the plates side by side, two a line; the chosen one tinted with a check, no radio circles. */}
-              <div className={cn('grid gap-2', offered.length > 1 && 'grid-cols-2')}>
+              <p className={cn('text-sm text-ink', offered.length > 1 && 'mb-2')}>{offered.length > 1 ? 'Par quelle automatisation commençons-nous ?' : 'Stationnement à automatiser :'}</p>
+              {/* Light: the plates side by side, each in a tight frame; the chosen one tinted with a check, no radio circles. */}
+              <div className="flex flex-wrap gap-2">
                 {offered.map((v) => {
                   const on = v.plate === choice?.plate
                   return (
@@ -297,11 +281,11 @@ export function Welcome({
                         'relative flex flex-col items-center justify-center gap-1 text-center',
                         offered.length === 1
                           ? 'w-auto cursor-default'
-                          : cn('w-full rounded-xl border px-3 py-3 transition', on ? 'border-eu bg-eu/[0.05]' : 'border-transparent bg-white hover:border-ink/15'),
+                          : cn('rounded-xl border p-1.5 transition', on ? 'border-eu bg-eu/[0.05]' : 'border-transparent hover:border-ink/15'),
                       )}
                     >
                       {offered.length > 1 && on && (
-                        <span className="absolute top-1.5 right-1.5 grid size-4 place-items-center rounded-full bg-eu text-white">
+                        <span className="absolute -top-1.5 -right-1.5 grid size-4 place-items-center rounded-full bg-eu text-white">
                           <Check className="size-2.5" strokeWidth={3.5} aria-hidden />
                         </span>
                       )}
