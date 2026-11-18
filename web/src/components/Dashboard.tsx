@@ -5,6 +5,7 @@ import { Car, LogOut, Plus } from 'lucide-react'
 import { PayByBot, PayByPhone, Plate, withPayByPhone } from '@/components/signs'
 import { TopBar } from '@/components/TopBar'
 import { InviteButton } from '@/components/Invite'
+import { ClaudeButton } from '@/components/Claude'
 import { DailyTickets, DailyWizard, isDaily, ruleState, when as whenAt } from '@/components/DailyTickets'
 import { AccountButton } from '@/components/Account'
 import { RippleButton } from '@/components/ui/ripple-button'
@@ -594,6 +595,7 @@ export function Dashboard({
         )}
         {/* Inviting a friend: always offered to a signed-in account (word of mouth is the only way in). */}
         {/* Programming a non-resident ticket: a sober button beside the invitation, no card in the page. */}
+        {!me.demo && <ClaudeButton disabled={!data} />}
         {!me.demo && <InviteButton disabled={!data} />}
         <AccountButton data={data} onDeleted={onDeleted ?? onLogout} demo={me.demo} login={me.demo ? undefined : me.username} />
         <button onClick={onLogout} className={ui.navText} aria-label="Déconnexion">
