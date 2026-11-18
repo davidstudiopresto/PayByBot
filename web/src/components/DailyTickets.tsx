@@ -326,7 +326,7 @@ function DailyCard({ ap, data, onChanged, needsOffer }: { ap: Autopilot; data: O
               ) : undefined
             }
             stopLabel={single ? 'Annuler ce ticket' : 'Arrêter le renouvellement'}
-            switchLabel={single ? 'Ticket programmé' : 'Renouvellement auto'}
+            switchLabel={single ? 'Ticket programmé' : 'Renouvellement automatique'}
           />
         )}
       </div>

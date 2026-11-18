@@ -370,12 +370,7 @@ export function SampleTicket({ className, interactive }: { className?: string; i
       )}
     >
       <div className="flex items-center justify-between gap-4 px-5 pt-5 pb-4">
-        <span className="flex items-center gap-3">
-          <span className="text-[1.05rem] font-medium text-ink">
-            <PayByPhone />
-          </span>
-          <Plate plate="AB123CD" size="sm" className="shrink-0 whitespace-nowrap" />
-        </span>
+        <Plate plate="AB123CD" size="sm" className="shrink-0 whitespace-nowrap" />
         <span className="text-sm whitespace-nowrap text-ink/60">Paris 5e</span>
       </div>
       <div className="border-t border-ink/[0.06] px-5 py-4">

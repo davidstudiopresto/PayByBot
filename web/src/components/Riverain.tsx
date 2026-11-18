@@ -327,17 +327,15 @@ export function RenewalActions({
       <div className={cn('space-y-3', className)}>
         <div className="flex items-center justify-between gap-4">
             <span className="min-w-0">
-              <span className="block text-[1.05rem] font-medium text-ink min-[360px]:whitespace-nowrap">{switchLabel}</span>
+              <span className="block text-[1.05rem] font-medium text-ink">{switchLabel}</span>
               {detail}
             </span>
             {/* The pause on the switch's line (one line less on the card). */}
             <span className="ml-auto" />
             {aside}
             {withPause && !later && !paused && (
-              <button onClick={() => setPausing(true)} aria-label="Pause" className="inline-flex shrink-0 items-center gap-1.5 text-sm whitespace-nowrap text-ink/60 transition hover:text-ink">
-                <Pause className="size-3.5" />
-                {/* The word from a tablet only: on a phone, the title stays on one line. */}
-                <span className="hidden sm:inline">Pause</span>
+              <button onClick={() => setPausing(true)} aria-label="Pause" title="Pause" className="-m-2 inline-flex shrink-0 items-center p-2 text-ink/60 transition hover:text-ink">
+                <Pause className="size-4" />
               </button>
             )}
             <ToggleSwitch checked={!slide.leaving} label={switchLabel} disabled={busy} busy={busy} onPress={slide.ask} />
@@ -676,7 +674,7 @@ export function nextRenewal(nextCheck: string | null | undefined, expire: string
 function SwitchLabel({ children, status }: { on: boolean; children?: ReactNode; status?: ReactNode }) {
   return (
     <span className="min-w-0">
-      <span className="block text-[1.05rem] font-medium text-ink min-[360px]:whitespace-nowrap">Renouvellement auto</span>
+      <span className="block text-[1.05rem] font-medium text-ink">Renouvellement automatique</span>
       {/* The switch says on or off: only a line of its own (the next renewal) when the card gives one. */}
       {(status || children) && (
         <span className="flex items-center gap-3">
@@ -768,8 +766,8 @@ export function RenewalSwitch({
       <SwitchLabel on={on} status={on ? status : undefined} />
       <span className="ml-auto" />
       {pausable && (
-        <button onClick={() => setPausing(true)} aria-label="Pause" className="inline-flex shrink-0 items-center gap-1.5 text-sm text-ink/60 transition hover:text-ink">
-          <Pause className="size-3.5" /> <span className="hidden sm:inline">Pause</span>
+        <button onClick={() => setPausing(true)} aria-label="Pause" title="Pause" className="-m-2 inline-flex shrink-0 items-center p-2 text-ink/60 transition hover:text-ink">
+          <Pause className="size-4" />
         </button>
       )}
       <ToggleSwitch checked={on && !slide.leaving} label="Renouvellement résident automatique" disabled={busy} busy={busy} onPress={onClick} />

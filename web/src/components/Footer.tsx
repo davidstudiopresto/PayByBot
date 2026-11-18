@@ -8,7 +8,7 @@ const LINKS = [
   ['mailto:contact@paybybot.fr', 'contact@paybybot.fr'],
 ]
 
-/** Legal links everywhere. */
+/** Legal links everywhere, and that PayByBot is not PayByPhone. */
 export function HostedFooter({ className }: { className?: string; hosted?: boolean; linksOnly?: boolean }) {
   return (
     <footer className={cn('space-y-2 text-center text-sm text-ink/60', className)}>
@@ -19,6 +19,8 @@ export function HostedFooter({ className }: { className?: string; hosted?: boole
           </a>
         ))}
       </nav>
+      {/* Said everywhere, not only in the legal pages: an independent service, not PayByPhone's. */}
+      <p className="text-ink/45">PayByBot est un service indépendant, non affilié à PayByPhone.</p>
     </footer>
   )
 }
