@@ -48,7 +48,9 @@ function DialogContent({
 }) {
   return (
     <DialogPortal>
-      <DialogOverlay />
+      {/* Forced even for a window opened over another (Base UI leaves those without one): the window under it is
+          dimmed and blurred, and can no longer be clicked. */}
+      <DialogOverlay forceRender />
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
