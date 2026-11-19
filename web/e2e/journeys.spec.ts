@@ -983,3 +983,28 @@ test('Claude : sans compte PayByBot, inscription puis retour sur « Autoriser Cl
   await expect.poll(() => back).toContain('code=')
   expect(new URL(back).searchParams.get('state')).toBe('st')
 })
+
+test('accueil : Cloudflare demande un clic, sa case apparaît et la connexion continue après', async ({ page }) => {
+  await page.route('**/api/config', async (r) => {
+    const real = await (await r.fetch()).json()
+    await r.fulfill({ json: { ...real, turnstileSiteKey: 'test-key' } })
+  })
+  // A stand-in for Cloudflare in doubt: no token until its own box is clicked.
+  await page.route('https://challenges.cloudflare.com/**', (r) =>
+    r.fulfill({
+      contentType: 'text/javascript',
+      body: `window.turnstile={render:(el,o)=>{setTimeout(()=>{o['before-interactive-callback']();const b=document.createElement('button');b.type='button';b.textContent='Je suis humain';b.onclick=()=>{o['after-interactive-callback']();o.callback('tok')};el.appendChild(b)},50);return 'w'},reset(){},remove(){}}`,
+    }),
+  )
+  let sent = false
+  await page.route('**/api/login', (r) => ((sent = true), r.fulfill({ status: 404, json: { detail: 'Aucun compte PayByBot pour ce compte PayByPhone.' } })))
+  await page.goto(LINK)
+  await page.getByLabel('Numéro de téléphone PayByPhone').fill('06 12 34 56 78')
+  await page.getByLabel('Mot de passe PayByPhone').fill('secret')
+  await page.getByRole('button', { name: 'Continuer' }).click()
+  const human = page.getByRole('button', { name: 'Je suis humain' })
+  await expect(human).toBeVisible()
+  await human.click()
+  await expect.poll(() => sent).toBe(true)
+  await expect(page).toHaveURL(/#\/inscription$/)
+})

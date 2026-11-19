@@ -9,9 +9,18 @@ import { LineBone, PlateBone } from '@/components/Skeletons'
 import { ui } from '@/lib/styles'
 import { SmoothHeight } from '@/components/ui/smooth-height'
 import { PlansDialog } from '@/components/Pricing'
-import { SmsHelp, SmsLabel, SmsSwitch, useSms } from '@/components/Riverain'
+import { prefetchSms, SmsHelp, SmsLabel, SmsSwitch, useSms } from '@/components/Riverain'
 
 /** "Mon compte" in the top bar: what PayByBot reads from the PayByPhone account, the home zone and e-mail. */
+/** What « Mon compte » shows, read ahead once the dashboard is up: it opens at once (and is read again behind). */
+let ahead: { u?: string; account?: Account; vehicles?: PricedVehicle[] } = {}
+export function prefetchAccount(user: string) {
+  if (ahead.u !== user) ahead = { u: user } // another account signed in on this tab: nothing of the last one kept
+  api.account().then((a) => ahead.u === user && (ahead.account = a), () => {})
+  api.pricing().then((p) => ahead.u === user && (ahead.vehicles = p.vehicles ?? []), () => {})
+  prefetchSms()
+}
+
 export function AccountButton({
   data,
   onDeleted,
@@ -59,19 +68,19 @@ function AccountDialog({
   demo: boolean
   login?: string
 }) {
-  const [email, setEmail] = useState<string | undefined>(undefined)
+  const [email, setEmail] = useState<string | undefined>(ahead.account?.email)
   const [deleting, setDeleting] = useState(false)
   const sms = useSms()
   const [plans, setPlans] = useState(false)
-  const [account, setAccount] = useState<Account | null | undefined>(undefined)
+  const [account, setAccount] = useState<Account | null | undefined>(ahead.account)
   // Only the « riverain » vehicles, each with the arrondissement PayByPhone gives it the resident rate in (never
   // typed); undefined: looking.
-  const [vehicles, setVehicles] = useState<PricedVehicle[] | undefined>(undefined)
+  const [vehicles, setVehicles] = useState<PricedVehicle[] | undefined>(ahead.vehicles)
   const [pricingFailed, setPricingFailed] = useState(false)
   const [accountTry, setAccountTry] = useState(0)
   useEffect(() => {
     api.pricing().then(
-      (p) => setVehicles(p.vehicles ?? []),
+      (p) => setVehicles((ahead.vehicles = p.vehicles ?? [])),
       // No answer: the plates PayByPhone gave, without a resident claim either way (never « aucun véhicule »).
       () => (setPricingFailed(true), setVehicles(data.vehicles.map((v) => ({ plate: v.plate, zone: null }) as PricedVehicle))),
     )
@@ -93,6 +102,7 @@ function AccountDialog({
   useEffect(() => {
     api.account().then(
       (a) => {
+        ahead.account = a
         setEmail(a.email)
         setAccount(a)
       },

@@ -44,6 +44,8 @@ export function useTurnstile() {
   const waiting = useRef<((token: string) => void)[]>([])
   const [enabled, setEnabled] = useState(false)
   const [failed, setFailedState] = useState<string | null>(null) // Cloudflare's error code, shown to help support
+  // Cloudflare in doubt asks for a click: its box must then show (it stays hidden, and zero-sized, the rest of the time).
+  const [asking, setAsking] = useState(false)
   const broken = useRef(false)
   const codeRef = useRef<string | null>(null)
   const setFailed = (code: string | null) => {
@@ -72,6 +74,8 @@ export function useTurnstile() {
             waiting.current.splice(0).forEach((resolve) => resolve(token))
           },
           'expired-callback': () => (current.current = null),
+          'before-interactive-callback': () => setAsking(true),
+          'after-interactive-callback': () => setAsking(false),
           'error-callback': (code: string) => {
             console.warn('Turnstile error', code)
             setFailed(String(code || 'inconnu'))
@@ -104,5 +108,5 @@ export function useTurnstile() {
     return value
   }, [enabled])
 
-  return { box, token, enabled, failed: failed ? failure(failed) : null }
+  return { box, token, enabled, asking, failed: failed ? failure(failed) : null }
 }

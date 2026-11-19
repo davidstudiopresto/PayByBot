@@ -1,5 +1,5 @@
 import { Loading } from '@/components/Loading'
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
 import { ACCOUNT_KEY, Dashboard, RESIDENTS_KEY } from '@/components/Dashboard'
@@ -44,20 +44,21 @@ function routeFromHash(hash: string): Route {
 
 const OVERVIEW_KEY = 'pbb-overview'
 
-/** The account data kept for this tab only (sessionStorage: gone when the tab closes, cleared at logout). */
-function cachedOverview(): Overview | null {
+/** The last account data, kept on this device for the signed-in user (cleared at logout): every opening shows the
+ *  dashboard at once, then PayByPhone's fresh answer about a second later (never a blank loading screen). */
+function cachedOverview(user: string): Overview | null {
   try {
-    const raw = sessionStorage.getItem(OVERVIEW_KEY)
-    return raw ? (JSON.parse(raw) as Overview) : null
+    const kept = JSON.parse(localStorage.getItem(OVERVIEW_KEY) ?? 'null') as { u: string; v: Overview } | null
+    return kept && kept.u === user ? kept.v : null
   } catch {
     return null
   }
 }
 
-function keepOverview(d: Overview | null) {
+function keepOverview(d: Overview | null, user?: string) {
   try {
-    if (d) sessionStorage.setItem(OVERVIEW_KEY, JSON.stringify(d))
-    else for (const key of [OVERVIEW_KEY, ACCOUNT_KEY, RESIDENTS_KEY]) sessionStorage.removeItem(key)
+    if (d && user) localStorage.setItem(OVERVIEW_KEY, JSON.stringify({ u: user, v: d }))
+    else if (!d) for (const key of [OVERVIEW_KEY, ACCOUNT_KEY, RESIDENTS_KEY]) (localStorage.removeItem(key), sessionStorage.removeItem(key))
   } catch {
     // storage blocked: nothing kept
   }
@@ -67,11 +68,16 @@ export default function App() {
   const [me, setMe] = useState<Me | null | undefined>(undefined)
   const [loadError, setLoadError] = useState<string | null>(null)
   const shown = useRef(false) // the dashboard is on screen: errors are toasts, not the loading screen
-  // The last account data seen in this tab: shown at once on a reload while fresh data is fetched (no blank page).
-  const [data, setDataState] = useState<Overview | null>(() => cachedOverview())
+  // The last account data of this user: shown at once while fresh data is fetched (no blank page).
+  const [data, setDataState] = useState<Overview | null>(null)
+  const user = useRef<string | undefined>(undefined)
+  useLayoutEffect(() => {
+    user.current = me ? me.username : undefined
+    if (me) setDataState((d) => d ?? cachedOverview(me.username))
+  }, [me])
   const setData = useCallback((d: Overview | null) => {
     setDataState(d)
-    keepOverview(d)
+    keepOverview(d, user.current)
   }, [])
   // The account data asked at start, alongside « who am I » (one round trip instead of two in a row).
   const early = useRef<Promise<Overview | null> | null>(null)

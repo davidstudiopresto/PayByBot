@@ -1597,8 +1597,18 @@ const SMS_FIGURES = [
 /** PayByPhone's paid SMS (confirmation, reminder): their state, read once, and the user's own switch. The switch
  *  moves at once; if PayByPhone refuses, it goes back and the way to do it in the app is shown. `enabled` is
  *  undefined while read, null when not known (then nothing is shown: never a guessed state). */
+/** The SMS state read ahead (« Mon compte » opens with it at once). */
+let smsAhead: boolean | null | undefined
+export function prefetchSms() {
+  api.sms().then((r) => (smsAhead = r.enabled), () => {})
+}
+
 export function useSms() {
-  const [enabled, setEnabled] = useState<boolean | null | undefined>(undefined)
+  const [enabled, setEnabledState] = useState<boolean | null | undefined>(smsAhead)
+  const setEnabled = (v: boolean | null | undefined) => {
+    smsAhead = v
+    setEnabledState(v)
+  }
   const [busy, setBusy] = useState(false)
   const [help, setHelp] = useState<boolean | null>(null) // the state the user asked for, when PayByPhone refused it
   const read = () => api.sms().then((r) => setEnabled(r.enabled), () => setEnabled(null))

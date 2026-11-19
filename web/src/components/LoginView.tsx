@@ -499,7 +499,8 @@ export function LoginView({
               <p className="flex items-center justify-center gap-1.5 text-sm text-ink/45">
                 <Lock className="size-3" /> Connexion protégée par Cloudflare
               </p>
-              <div ref={human.box} className="absolute inset-0 overflow-hidden" />
+              {/* Hidden over this line; shown under it when Cloudflare asks for a click. */}
+              <div ref={human.box} className={human.asking ? 'mt-3 flex justify-center' : 'absolute inset-0 overflow-hidden'} />
             </div>
           )}
 
@@ -786,7 +787,7 @@ export function HeroLogin({ onLogin, className }: { onLogin: (me: Me) => void; c
       </div>
       {(error || human.failed) && <Notice>{withPayByPhone(error ?? human.failed ?? '')}</Notice>}
       {/* Cloudflare's check needs its (invisible) box in the page, else its token never comes and the button spins. */}
-      {human.enabled && <div ref={human.box} className="h-0 overflow-hidden" />}
+      {human.enabled && <div ref={human.box} className={human.asking ? 'flex justify-center' : 'h-0 overflow-hidden'} />}
       <button
         type="submit"
         disabled={loading}

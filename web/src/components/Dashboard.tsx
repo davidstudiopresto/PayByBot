@@ -7,7 +7,7 @@ import { TopBar } from '@/components/TopBar'
 import { InviteButton } from '@/components/Invite'
 import { ClaudeButton } from '@/components/Claude'
 import { DailyTickets, DailyWizard, isDaily, ruleState, when as whenAt } from '@/components/DailyTickets'
-import { AccountButton } from '@/components/Account'
+import { AccountButton, prefetchAccount } from '@/components/Account'
 import { RippleButton } from '@/components/ui/ripple-button'
 import { FreeMonthCard, PlansDialog, ReactivateCard, TrialBanner } from '@/components/Pricing'
 import { ui } from '@/lib/styles'
@@ -320,13 +320,13 @@ function IdleVehicles({ data, onChanged, hosted, demo, autoPlate, locked, onLogo
   )
 }
 
-/** Account details kept for this tab only (sessionStorage, cleared at logout), for the signed-in user only. */
+/** Account details kept on this device (cleared at logout), for the signed-in user only. */
 export const ACCOUNT_KEY = 'pbb-account'
 export const RESIDENTS_KEY = 'pbb-residents'
 
 function kept<T>(key: string, user: string): T | null {
   try {
-    const v = JSON.parse(sessionStorage.getItem(key) ?? 'null') as { u: string; v: T } | null
+    const v = JSON.parse(localStorage.getItem(key) ?? 'null') as { u: string; v: T } | null
     return v && v.u === user ? v.v : null
   } catch {
     return null
@@ -335,8 +335,8 @@ function kept<T>(key: string, user: string): T | null {
 
 function keep(key: string, user: string, value: unknown) {
   try {
-    if (value == null) sessionStorage.removeItem(key)
-    else sessionStorage.setItem(key, JSON.stringify({ u: user, v: value }))
+    if (value == null) localStorage.removeItem(key)
+    else localStorage.setItem(key, JSON.stringify({ u: user, v: value }))
   } catch {
     // storage blocked: nothing kept
   }
@@ -362,6 +362,15 @@ export function Dashboard({
   onLogout: () => void
   onDeleted?: () => void
 }) {
+  // « Mon compte » read ahead once the dashboard shows, when the browser is idle: it then opens at once.
+  const hasData = !!data
+  useEffect(() => {
+    if (!hasData || me.demo) return
+    const idle = (window as Window & { requestIdleCallback?: (f: () => void) => number }).requestIdleCallback
+    const run = () => prefetchAccount(me.username)
+    if (idle) idle(run)
+    else setTimeout(run, 1500)
+  }, [hasData, me.username, me.demo])
   const now = useNow()
   // Kept for this tab like the account data: on a reload the trial bar and the switches are there at once, instead
   // of pushing the page down a moment later.
